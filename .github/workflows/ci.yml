@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Lint (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── CLI package ──────────────────────────────────────────
+      - name: Lint CLI (type-check)
+        working-directory: packages/cli
+        run: npx tsc --noEmit
+
+      - name: Build CLI
+        working-directory: packages/cli
+        run: npm run build
+
+      # ── Extension package ────────────────────────────────────
+      - name: Lint Extension (type-check)
+        working-directory: packages/extension
+        run: npx tsc --noEmit
+
+      - name: Build Extension
+        working-directory: packages/extension
+        run: npm run build
+
+      # ── Future: unit tests ───────────────────────────────────
+      # - name: Run tests
+      #   run: npm test --workspaces --if-present

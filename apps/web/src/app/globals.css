@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-obsidian: #000000;
+  --color-neon-mint: #00FF88;
+  --color-neon-mint-dim: rgba(0, 255, 136, 0.2);
+  --color-surface: #111111;
+  --color-surface-hover: #1a1a1a;
+  --color-border: #333333;
+  --color-text-primary: #FFFFFF;
+  --color-text-muted: #888888;
+}
+
+:root {
+  background-color: var(--color-obsidian);
+  color: var(--color-text-primary);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code, pre {
+  font-family: var(--font-geist-mono), monospace;
+}
+
+/* Custom glow effect utilities */
+@layer utilities {
+  .glow-mint {
+    box-shadow: 0 0 15px var(--color-neon-mint-dim), 0 0 5px var(--color-neon-mint-dim);
+  }
+  
+  .glow-text-mint {
+    text-shadow: 0 0 10px var(--color-neon-mint-dim);
+  }
+}
+
+/* Base custom scrollbar for that "Linear" feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}

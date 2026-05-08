@@ -1,0 +1,45 @@
+{
+  "name": "@backspace/cli",
+  "version": "0.1.0",
+  "description": "Backspace CLI — deterministic state management for AI coding sessions",
+  "type": "module",
+  "bin": {
+    "backspace": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "lint": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "@sentry/node": "^9.0.0",
+    "chalk": "^5.3.0",
+    "chokidar": "^3.6.0",
+    "commander": "^12.1.0",
+    "diff": "^9.0.0",
+    "express": "^5.2.1",
+    "ignore": "^7.0.0",
+    "open": "^11.0.0",
+    "ora": "^8.1.0",
+    "prompts": "^2.4.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.2",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/prompts": "^2.4.9",
+    "rimraf": "^5.0.7",
+    "tsup": "^8.1.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
