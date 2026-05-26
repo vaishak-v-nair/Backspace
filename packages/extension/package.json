@@ -1,7 +1,7 @@
 {
   "name": "backspace-timeline",
   "displayName": "Backspace Timeline",
-  "description": "Visual timeline for AI-driven code changes — scrub through snapshots captured by the Backspace CLI.",
+  "description": "Visual timeline for AI-driven code changes.",
   "version": "0.1.0",
   "publisher": "backspace",
   "license": "MIT",
@@ -17,35 +17,15 @@
   "contributes": {
     "commands": [
       {
-        "command": "backspace.openTimeline",
-        "title": "Backspace: Open Timeline",
-        "icon": "$(history)"
+        "command": "backspace.showTimeline",
+        "title": "Backspace: Show Timeline"
       }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "backspace",
-          "title": "Backspace",
-          "icon": "$(history)"
-        }
-      ]
-    },
-    "views": {
-      "backspace": [
-        {
-          "type": "webview",
-          "id": "backspace.timelineView",
-          "name": "Timeline"
-        }
-      ]
-    }
+    ]
   },
   "scripts": {
-    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:better-sqlite3 --format=cjs --platform=node --sourcemap",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:better-sqlite3 --format=cjs --platform=node",
     "watch": "npm run build -- --watch",
-    "lint": "tsc --noEmit",
-    "package": "vsce package"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0"

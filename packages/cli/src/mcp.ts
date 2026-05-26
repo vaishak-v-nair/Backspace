@@ -20,6 +20,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 
 import { openDatabase, listSnapshots, getSnapshot, isInitialized } from './db.js';
+import { decryptData } from './crypto.js';
+import zlib from 'zlib';
 
 // ─── Server setup ─────────────────────────────────────────────────────────────
 
@@ -120,7 +122,7 @@ server.tool(
         const all = listSnapshots(db);
         const match = all.find(s => s.id.startsWith(snapshot_id));
         if (match) {
-          snapshot = match;
+          snapshot = getSnapshot(db, match.id);
         }
       }
 
@@ -133,10 +135,46 @@ server.tool(
         };
       }
 
-      const diffData = snapshot.diff_data as Record<string, string>;
-      const files = Object.entries(diffData);
+      // Decrypt the snapshot payload if it's encrypted
+      let diffPayloads: any[];
+      try {
+        let rawPayload = snapshot.diff_data;
+        if (typeof rawPayload === 'string') {
+          rawPayload = JSON.parse(rawPayload);
+        }
 
-      if (files.length === 0) {
+        if (rawPayload && rawPayload.cipher_payload) {
+          // Encrypted payload — decrypt it
+          let decryptedStr = decryptData(
+            rawPayload.cipher_payload,
+            rawPayload.crypto_iv,
+            rawPayload.crypto_tag,
+            cwd
+          );
+
+          // If the payload was compressed before encryption, decompress
+          if (rawPayload.compressed) {
+            const compressedBuf = Buffer.from(decryptedStr, 'base64');
+            decryptedStr = zlib.brotliDecompressSync(compressedBuf).toString('utf8');
+          }
+
+          diffPayloads = JSON.parse(decryptedStr);
+        } else if (Array.isArray(rawPayload)) {
+          // Unencrypted legacy format
+          diffPayloads = rawPayload;
+        } else {
+          diffPayloads = [];
+        }
+      } catch (e) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Failed to decrypt snapshot \`${snapshot_id}\`. The encryption key may have changed.`,
+          }],
+        };
+      }
+
+      if (diffPayloads.length === 0) {
         return {
           content: [{
             type: 'text' as const,
@@ -145,15 +183,21 @@ server.tool(
         };
       }
 
-      const sections = files.map(([filePath, patch]) => {
-        return `## ${filePath}\n\`\`\`diff\n${patch}\n\`\`\``;
+      const sections = diffPayloads.map((entry: any) => {
+        if (entry.patch === 'BINARY_FILE_BYPASSED') {
+          return `## ${entry.path}\n*(binary file — ${entry.event})*`;
+        }
+        if (entry.event === 'unlink') {
+          return `## ${entry.path} *(deleted)*\n\`\`\`\n${entry.patch}\n\`\`\``;
+        }
+        return `## ${entry.path}\n\`\`\`diff\n${entry.patch}\n\`\`\``;
       });
 
       const header = [
         `# Diff for Snapshot \`${snapshot.id.substring(0, 8)}\``,
         `- **Time:** ${snapshot.timestamp.toLocaleString()}`,
         `- **Prompt:** ${snapshot.prompt_context}`,
-        `- **Files changed:** ${files.length}`,
+        `- **Files changed:** ${diffPayloads.length}`,
         '',
       ].join('\n');
 

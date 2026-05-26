@@ -11,84 +11,81 @@ import { initCommand } from './commands/init.js';
 import { watchCommand } from './commands/watch.js';
 import { revertCommand } from './commands/revert.js';
 import { loginCommand } from './commands/login.js';
+import { joinCommand } from './commands/join.js';
 import { telemetryCommand } from './commands/telemetry.js';
 import { integrateCommand } from './commands/integrate.js';
 import { mcpCommand } from './mcp.js';
+import { startSupervisedDaemon, runSupervisorWorkerLoop } from './supervisor.js';
+import path from 'path';
+
+// Internal hidden routing flags passed down by the supervisor instance
+if (process.argv[2] === "__daemon-worker") {
+  const cliRootEntryPoint = process.argv[1];
+  // Convert current runtime path down to execute daemon.ts smoothly
+  // Note: Since we are running with tsx in dev, we point to daemon.ts
+  const daemonTargetFile = path.join(path.dirname(cliRootEntryPoint), "daemon.ts");
+  runSupervisorWorkerLoop(daemonTargetFile);
+} else {
 
 // ── Telemetry (initialise before anything else) ──────────────────────────────
 
 initTelemetry();
 
-// ── CLI setup ────────────────────────────────────────────────────────────────
+// ── CLI Configuration ────────────────────────────────────────────────────────
 
 const program = new Command();
 
 program
   .name('backspace')
-  .description(
-    'Deterministic state management for AI-driven coding sessions.\n' +
-      'Capture diffs, tag them with prompts, roll back in one command.'
-  )
-  .version('0.1.0', '-v, --version', 'Print the current Backspace version');
+  .description('Deterministic state management for AI coding sessions')
+  .version('0.1.0');
 
-// ── Commands ──────────────────────────────────────────────────────────────────
+// ── Command Registration ─────────────────────────────────────────────────────
 
 program
   .command('init')
-  .description(
-    'Initialize Backspace in the current project directory.\n' +
-      'Creates a .backspace/ folder with a local SQLite database.'
-  )
+  .description('Initialize Backspace in the current repository')
   .action(initCommand);
 
 program
   .command('watch')
-  .description(
-    'Start the Backspace daemon to watch for file changes and auto-capture snapshots.'
-  )
-  .action(watchCommand);
+  .description('Launch the indestructible background file tracking pipeline')
+  .action(() => {
+    const mainCliExecutablePath = process.argv[1];
+    startSupervisedDaemon(mainCliExecutablePath);
+  });
 
 program
   .command('revert')
-  .description(
-    'Open the Time Machine interactive menu to revert to a previous snapshot.'
-  )
+  .description('Roll back to a previous deterministic codebase state')
   .action(revertCommand);
 
 program
   .command('login')
-  .description('Log in to the Backspace web app to sync your snapshots globally.')
+  .description('Authenticate the CLI with your Backspace account')
   .action(loginCommand);
 
 program
-  .command('telemetry [action]')
-  .description(
-    'Manage anonymous crash reporting.\n' +
-      '  status   — Show whether telemetry is enabled (default)\n' +
-      '  enable   — Opt in to anonymous crash reporting\n' +
-      '  disable  — Opt out of crash reporting'
-  )
+  .command('join')
+  .description('Join an existing project from a remote repository')
+  .action(joinCommand);
+
+program
+  .command('telemetry')
+  .description('Configure telemetry settings')
   .action(telemetryCommand);
 
 program
-  .command('integrate <tool>')
-  .description('Automatically configure AI tools (like claude) to connect to Backspace.')
+  .command('integrate')
+  .description('Inject Backspace MCP config into Claude Desktop')
   .action(integrateCommand);
 
 program
   .command('mcp')
-  .description('Start the Backspace MCP server over stdio for AI agents.')
-  .action(async () => {
-    try {
-      await mcpCommand();
-    } catch (err) {
-      captureException(err);
-      console.error('[Backspace MCP] Fatal error:', err);
-      process.exit(1);
-    }
-  });
+  .description('Start the Backspace MCP server')
+  .action(mcpCommand);
 
-// ── Future commands (stubs — will be wired in subsequent phases) ──────────────
+// ── Future Commands (Placeholders) ───────────────────────────────────────────
 // program.command('log').description('...')
 // program.command('show').description('...')
 
@@ -99,4 +96,5 @@ try {
 } catch (err) {
   captureException(err);
   throw err;
+}
 }
