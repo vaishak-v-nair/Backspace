@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const result = syncPayloadSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Invalid payload structure', details: result.error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid payload structure', details: result.error.issues }, { status: 400 });
     }
 
     const { projectId, payloads } = result.data;

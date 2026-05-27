@@ -2,11 +2,6 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { ClerkProvider } from "@clerk/nextjs";
-
-import SmoothScroll from "@/components/SmoothScroll";
-import Cursor from "@/components/Cursor";
-
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -18,8 +13,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Backspace — Deterministic Undo for AI Coding",
-  description: "Claude Code broke your build? Stop burning tokens trying to fix it. One slider to snap your project back to safety.",
+  title: "Backspace — Undo Anything Your AI Just Did",
+  description:
+    "Local-first deterministic rollback for AI-assisted coding workflows. One command to revert any AI session. Your code never leaves your machine.",
+  keywords: [
+    "AI coding",
+    "rollback",
+    "undo",
+    "developer tools",
+    "CLI",
+    "Claude Code",
+    "Cursor",
+    "Copilot",
+    "local-first",
+    "code safety",
+  ],
+  openGraph: {
+    title: "Backspace — Undo Anything Your AI Just Did",
+    description:
+      "Claude broke your build? Cursor hallucinated across 47 files? One command. Every file restored. Zero tokens wasted.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Backspace — Undo Anything Your AI Just Did",
+    description:
+      "Local-first deterministic rollback for AI-assisted coding. One command to revert any AI session.",
+  },
 };
 
 export default function RootLayout({
@@ -28,19 +48,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider appearance={{ variables: { colorPrimary: "#00FF88" } }}>
-      <html lang="en" className="bg-[#050505] text-white antialiased cursor-none">
-        <body className={`${inter.variable} ${geistMono.variable} selection:bg-white selection:text-black`}>
-          {/* Film Grain Overlay */}
-          <div className="pointer-events-none fixed inset-0 z-50 h-full w-full bg-[url('/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
-          
-          <Cursor />
-          
-          <SmoothScroll>
-            {children}
-          </SmoothScroll>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className="bg-[#050505] text-white antialiased">
+      <body
+        className={`${inter.variable} ${geistMono.variable}`}
+      >
+        {children}
+      </body>
+    </html>
   );
 }
