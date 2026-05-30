@@ -31,18 +31,13 @@ export default function Footer() {
             <h4 className="text-xs uppercase tracking-[0.2em] text-white/30 mb-4">Developers</h4>
             <ul className="space-y-3">
               <li>
-                <a href="https://github.com/vaishak-v-nair/backspace" target="_blank" rel="noopener noreferrer" className="text-sm text-white/40 hover:text-white transition-colors">
-                  GitHub
-                </a>
-              </li>
-              <li>
                 <a href="https://www.npmjs.com/package/backspace-ai" target="_blank" rel="noopener noreferrer" className="text-sm text-white/40 hover:text-white transition-colors">
                   npm
                 </a>
               </li>
               <li>
                 <a href="#waitlist" className="text-sm text-white/40 hover:text-white transition-colors">
-                  Join Waitlist
+                  Get Updates
                 </a>
               </li>
             </ul>

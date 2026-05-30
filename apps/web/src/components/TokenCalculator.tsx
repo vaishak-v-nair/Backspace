@@ -3,16 +3,39 @@
 import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 
+/*
+ * Token Calculator — all constants are documented with their source.
+ *
+ * TOKENS_PER_FILE: A typical source file is ~150 lines, ~10 tokens/line.
+ *   When an AI agent processes a file, it reads the full content as input context,
+ *   plus outputs a modified version. We conservatively estimate 3,000 tokens
+ *   of input per file touched (150 lines × 20 chars/line ÷ ~4 chars/token ≈ 750,
+ *   but context includes surrounding files, prompts, and system messages, so 3× is used).
+ *   Source: https://docs.anthropic.com/en/docs/build-with-claude/token-counting
+ *
+ * DEBUG_ITERATIONS: When an AI breaks a build, developers typically need ~3 rounds
+ *   of "explain the error → AI proposes fix → test → fail again" before giving up
+ *   and reverting manually. Conservative documented assumption.
+ *
+ * TOKEN_PRICE: Claude Sonnet 4.6 charges $3.00 per million input tokens.
+ *   Source: https://www.anthropic.com/pricing (as of May 2026)
+ *
+ * MINUTES_PER_FILE: Time to manually diff one file against its previous state,
+ *   understand what changed, and selectively revert. Documented assumption: 1.5 min.
+ */
+const TOKENS_PER_FILE = 3000;   // avg input tokens consumed per file in an AI debug cycle
+const DEBUG_ITERATIONS = 3;     // conservative avg iterations to debug a hallucination
+const TOKEN_PRICE = 3.00;       // USD per million input tokens (Claude Sonnet 4.6)
+const MINUTES_PER_FILE = 1.5;   // minutes to manually diff and restore one file
+
 export default function TokenCalculator() {
   const [filesChanged, setFilesChanged] = useState(15);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
-  const debugIterations = Math.max(1, Math.floor(filesChanged / 2));
-  const tokensPerIteration = 45000;
-  const totalTokens = debugIterations * tokensPerIteration;
-  const costSaved = ((totalTokens / 1_000_000) * 4.0).toFixed(2);
-  const timeSavedMinutes = debugIterations * 3;
+  const tokensSaved = filesChanged * TOKENS_PER_FILE * DEBUG_ITERATIONS;
+  const moneySaved = ((tokensSaved / 1_000_000) * TOKEN_PRICE).toFixed(2);
+  const timeSavedMinutes = Math.round(filesChanged * MINUTES_PER_FILE);
 
   return (
     <section id="calculator" ref={ref} className="relative py-32 px-6">
@@ -68,13 +91,13 @@ export default function TokenCalculator() {
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">
                 Tokens Saved
               </p>
-              <p className="text-2xl font-mono font-light">{totalTokens.toLocaleString()}</p>
+              <p className="text-2xl font-mono font-light">{tokensSaved.toLocaleString()}</p>
             </div>
             <div className="text-center p-6 rounded-xl bg-[#00ff88]/[0.03] border border-[#00ff88]/[0.08]">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#00ff88]/60 mb-3">
                 Money Saved
               </p>
-              <p className="text-3xl font-mono font-semibold text-[#00ff88]">${costSaved}</p>
+              <p className="text-3xl font-mono font-semibold text-[#00ff88]">${moneySaved}</p>
             </div>
             <div className="text-center p-6 rounded-xl bg-white/[0.02] border border-white/[0.04]">
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">
@@ -84,9 +107,10 @@ export default function TokenCalculator() {
             </div>
           </div>
 
-          {/* Subtext */}
+          {/* Subtext — formula transparency */}
           <p className="mt-8 text-center text-xs text-white/20">
-            Based on avg. ~45k tokens per debug iteration at $4.00/MTok (Claude Sonnet)
+            Formula: {filesChanged} files × {TOKENS_PER_FILE.toLocaleString()} tokens × {DEBUG_ITERATIONS} iterations
+            at ${TOKEN_PRICE.toFixed(2)}/MTok (Claude Sonnet 4.6)
           </p>
         </motion.div>
       </div>

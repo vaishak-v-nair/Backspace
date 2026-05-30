@@ -107,14 +107,14 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Create URI for the virtual document
-            const uri = vscode.Uri.parse(\`\${SCHEME}:Historical State?\` + JSON.stringify({ content: historicalContent }));
+            const uri = vscode.Uri.parse(`${SCHEME}:Historical State?` + JSON.stringify({ content: historicalContent }));
             
             // Open the native side-by-side diff view
             await vscode.commands.executeCommand(
               'vscode.diff',
               uri, // Left side (historical)
               activeEditor.document.uri, // Right side (current)
-              \`Snapshot \${snapshot.id} vs Current\`
+              `Snapshot ${snapshot.id} vs Current`
             );
             return;
           }
@@ -135,10 +135,10 @@ export function activate(context: vscode.ExtensionContext) {
             
             const snapshot = snapshots.find(s => s.id === message.snapshotId);
             if (snapshot) {
-                vscode.window.showInformationMessage(\`Reverting to snapshot \${snapshot.id}...\`);
+                vscode.window.showInformationMessage(`Reverting to snapshot ${snapshot.id}...`);
                 // Let's call the CLI if we had a non-interactive mode:
-                // exec(\`npx backspace revert --id \${snapshot.id}\`)
-                vscode.window.showInformationMessage(\`✨ Successfully reverted codebase to selected state.\`);
+                // exec(`npx backspace revert --id ${snapshot.id}`)
+                vscode.window.showInformationMessage(`✨ Successfully reverted codebase to selected state.`);
             }
             return;
           }
@@ -163,7 +163,7 @@ function getWebviewContent(snapshots: any[]) {
 
   const snapshotsJson = JSON.stringify(lightweightSnapshots);
 
-  return \`
+  return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -321,7 +321,7 @@ function getWebviewContent(snapshots: any[]) {
 
       <script>
         const vscode = acquireVsCodeApi();
-        const snapshots = \${snapshotsJson};
+        const snapshots = ${snapshotsJson};
         
         const slider = document.getElementById('timelineSlider');
         const timestampEl = document.getElementById('timestamp');
@@ -380,7 +380,7 @@ function getWebviewContent(snapshots: any[]) {
       </script>
     </body>
     </html>
-  \`;
+  `;
 }
 
 export function deactivate() {}

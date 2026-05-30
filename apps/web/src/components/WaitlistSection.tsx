@@ -6,8 +6,7 @@ import { motion, useInView } from "framer-motion";
 export default function WaitlistSection() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [betaKey, setBetaKey] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [message, setMessage] = useState("");
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -16,7 +15,7 @@ export default function WaitlistSection() {
     if (!email || status === "loading") return;
 
     setStatus("loading");
-    setErrorMsg("");
+    setMessage("");
 
     try {
       const res = await fetch("/api/waitlist", {
@@ -28,13 +27,15 @@ export default function WaitlistSection() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
+        setMessage(data.error || "Something went wrong.");
+        setStatus("error");
+        return;
       }
 
-      setBetaKey(data.betaKey || "");
+      setMessage(data.message || "You're on the list!");
       setStatus("success");
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch {
+      setMessage("Network error. Please try again.");
       setStatus("error");
     }
   };
@@ -51,45 +52,43 @@ export default function WaitlistSection() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <p className="text-xs uppercase tracking-[0.3em] text-white/30 mb-6">
-            Early Access
+            Stay in the Loop
           </p>
 
           <h2 className="text-3xl font-semibold tracking-tight md:text-5xl mb-4">
-            Ready to stop fearing
+            Get updates on
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00ff88] to-[#00cc6a]">
-              AI edits?
+              new releases.
             </span>
           </h2>
 
           <p className="text-lg text-white/40 mb-12 max-w-lg mx-auto">
-            Join the waitlist to get early CLI access and help shape the future of AI-safe development.
+            Sign up to hear about new features, CLI updates, and integrations as we build them.
           </p>
 
           {status === "success" ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-6"
+              className="space-y-4"
             >
               <div className="inline-flex items-center gap-3 rounded-full bg-[#00ff88]/10 border border-[#00ff88]/20 px-6 py-3">
                 <span className="text-[#00ff88]">✓</span>
-                <span className="text-sm text-white/80">You&apos;re on the list!</span>
+                <span className="text-sm text-white/80">{message}</span>
               </div>
 
-              {betaKey && (
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
-                  <p className="text-xs text-white/30 mb-3 uppercase tracking-wider">Your beta key</p>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(`npx backspace-ai login --key ${betaKey}`)}
-                    className="group font-mono text-sm text-white/70 hover:text-white transition-colors"
-                  >
-                    <span className="text-white/40">$ </span>
-                    npx backspace-ai login --key {betaKey}
-                    <span className="ml-2 text-white/30 group-hover:text-[#00ff88] transition-colors">⎘</span>
-                  </button>
-                </div>
-              )}
+              <p className="text-sm text-white/30">
+                In the meantime, install the CLI:
+              </p>
+              <button
+                onClick={() => navigator.clipboard.writeText("npm install -g backspace-ai")}
+                className="group font-mono text-sm text-white/70 hover:text-white transition-colors"
+              >
+                <span className="text-white/40">$ </span>
+                npm install -g backspace-ai
+                <span className="ml-2 text-white/30 group-hover:text-[#00ff88] transition-colors">⎘</span>
+              </button>
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
@@ -113,20 +112,15 @@ export default function WaitlistSection() {
                     Joining...
                   </span>
                 ) : (
-                  "Join Waitlist"
+                  "Get Updates"
                 )}
               </button>
             </form>
           )}
 
           {status === "error" && (
-            <p className="mt-4 text-sm text-[#ff4444]">{errorMsg}</p>
+            <p className="mt-4 text-sm text-[#ff4444]">{message}</p>
           )}
-
-          <p className="mt-6 text-xs text-white/20">
-            Or install directly:{" "}
-            <code className="font-mono text-white/40">npx backspace-ai init</code>
-          </p>
         </motion.div>
       </div>
     </section>

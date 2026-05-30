@@ -63,23 +63,14 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA */}
+          {/* CTA — Install, consistent with hero */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="https://github.com/vaishak-v-nair/backspace"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-white/50 hover:text-white transition-colors"
-            >
-              GitHub
-            </a>
-            <a
-              href="#waitlist"
-              onClick={(e) => handleNavClick(e, "#waitlist")}
+            <button
+              onClick={() => navigator.clipboard.writeText("npm install -g backspace-ai")}
               className="rounded-full bg-white px-5 py-2 text-sm font-medium text-black hover:bg-white/90 transition-colors"
             >
-              Get Early Access
-            </a>
+              Install Now
+            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -115,13 +106,12 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <a
-                href="#waitlist"
-                onClick={(e) => handleNavClick(e, "#waitlist")}
+              <button
+                onClick={() => navigator.clipboard.writeText("npm install -g backspace-ai")}
                 className="mt-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black text-center"
               >
-                Get Early Access
-              </a>
+                Install Now
+              </button>
             </div>
           </motion.div>
         )}

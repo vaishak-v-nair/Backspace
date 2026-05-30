@@ -1,5 +1,5 @@
 /**
- * commands/init.ts — `backspace init`
+ * commands/init.ts — `backspace-ai init`
  *
  * Creates the hidden `.backspace/` directory and SQLite database in the
  * current working directory. Safe to call multiple times (idempotent).
@@ -26,8 +26,8 @@ export async function initCommand(): Promise<void> {
     console.log('');
     console.log(
       chalk.dim('  Run ') +
-      chalk.cyan('backspace start "<prompt>"') +
-      chalk.dim(' to begin a new session.')
+      chalk.cyan('backspace-ai watch') +
+      chalk.dim(' to start tracking changes.')
     );
     return;
   }
@@ -44,12 +44,12 @@ export async function initCommand(): Promise<void> {
     db.prepare('SELECT COUNT(*) AS c FROM snapshots').get();
     db.close();
 
-    spinner.succeed(chalk.green.bold('Backspace initialized successfully!'));
+    spinner.succeed(chalk.green.bold('Backspace initialized'));
 
     console.log('');
 
     // ── Summary ──────────────────────────────────────────────────────────────
-    console.log(chalk.bold('  Created files'));
+    console.log(chalk.dim('  Created:'));
     console.log(
       chalk.dim('    ') +
       chalk.cyan(path.join('.', BACKSPACE_DIR, '/')) +
@@ -63,44 +63,25 @@ export async function initCommand(): Promise<void> {
 
     console.log('');
 
-    // ── Schema summary ────────────────────────────────────────────────────────
-    console.log(chalk.bold('  Schema'));
-    const schemaLines = [
-      ['id', 'TEXT PRIMARY KEY', 'UUID v4'],
-      ['timestamp', 'INTEGER', 'Unix epoch ms'],
-      ['prompt_context', 'TEXT', 'AI prompt that triggered the session'],
-      ['file_paths', 'TEXT (JSON)', 'Array of affected file paths'],
-      ['diff_data', 'TEXT (JSON)', 'Unified diff payload per file'],
-    ];
-
-    const colWidth = Math.max(...schemaLines.map(([col]) => col.length));
-    for (const [col, type, note] of schemaLines) {
-      console.log(
-        chalk.dim('    ') +
-        chalk.cyan(col.padEnd(colWidth + 2)) +
-        chalk.yellow(type.padEnd(18)) +
-        chalk.dim(note)
-      );
-    }
-
-    console.log('');
-
     // ── Next steps ────────────────────────────────────────────────────────────
-    console.log(chalk.bold('  Next steps'));
+    console.log(chalk.dim('  Next steps:'));
     console.log(
-      chalk.dim('    1.  Add ') +
-      chalk.cyan(BACKSPACE_DIR + '/') +
-      chalk.dim(' to your .gitignore')
+      chalk.dim('    1. Run ') +
+      chalk.cyan('backspace-ai watch') +
+      chalk.dim(' to start tracking changes')
     );
     console.log(
-      chalk.dim('    2.  Run ') +
-      chalk.cyan('backspace start "<your AI prompt>"') +
-      chalk.dim(' before handing off to an AI agent')
+      chalk.dim('    2. Use your AI coding tool normally')
     );
     console.log(
-      chalk.dim('    3.  Run ') +
-      chalk.cyan('backspace log') +
-      chalk.dim(' to review captured sessions')
+      chalk.dim('    3. Run ') +
+      chalk.cyan('backspace-ai stop') +
+      chalk.dim(' when the session is done')
+    );
+    console.log(
+      chalk.dim('    4. Run ') +
+      chalk.cyan('backspace-ai revert') +
+      chalk.dim(' if you need to undo everything')
     );
     console.log('');
   } catch (err) {

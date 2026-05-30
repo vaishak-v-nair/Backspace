@@ -10,7 +10,7 @@ const features = [
     icon: "↩",
     accent: "#00ff88",
     span: "col-span-1 md:col-span-2",
-    code: "$ backspace revert\n✓ 47 files reverted in 0.3s",
+    code: "$ backspace-ai revert\n✓ Files reverted to pre-AI state",
   },
   {
     title: "Session Tracking",
@@ -21,20 +21,20 @@ const features = [
     code: null,
   },
   {
-    title: "AES-256 Encrypted",
-    description: "All snapshots encrypted at rest with AES-256-GCM. Your code never leaves your machine unprotected.",
-    icon: "🔒",
+    title: "Prompt Tagging",
+    description: "Every session is tagged with your natural language description of what the AI was doing, making sessions instantly searchable and scannable.",
+    icon: "🏷️",
     accent: "#f59e0b",
     span: "col-span-1",
     code: null,
   },
   {
-    title: "MCP Native",
-    description: "Claude Code, Cursor, and other AI agents can see your snapshots and self-revert through the Model Context Protocol.",
-    icon: "⚡",
+    title: "Local Only",
+    description: "All snapshot data stays on your machine in a local SQLite file. Nothing is sent to any server. No account required to use the CLI.",
+    icon: "💻",
     accent: "#06b6d4",
     span: "col-span-1 md:col-span-2",
-    code: "// Claude automatically uses Backspace\ntool: list_snapshots → get_snapshot_diff",
+    code: "$ ls .backspace/\nlocal.db    ← all data lives here, nowhere else",
   },
   {
     title: "Git Compatible",
@@ -50,7 +50,7 @@ const features = [
     icon: "▸",
     accent: "#00ff88",
     span: "col-span-1",
-    code: "$ backspace init\n✓ Ready in 0.1s",
+    code: "$ backspace-ai init\n✓ Backspace initialized",
   },
 ];
 
@@ -117,7 +117,7 @@ export default function FeaturesGrid() {
               {feature.code && (
                 <div className="mt-5 rounded-lg bg-black/40 border border-white/[0.04] p-4 font-mono text-xs text-white/50 leading-relaxed">
                   {feature.code.split("\n").map((line, j) => (
-                    <div key={j} className={line.startsWith("✓") || line.startsWith("tool:") ? "text-[#00ff88]" : ""}>
+                    <div key={j} className={line.startsWith("✓") ? "text-[#00ff88]" : ""}>
                       {line}
                     </div>
                   ))}

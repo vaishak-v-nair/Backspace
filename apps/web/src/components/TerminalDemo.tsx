@@ -10,24 +10,23 @@ interface TerminalLine {
 
 const sequences: TerminalLine[] = [
   { type: "prompt", text: "~/my-project", delay: 0 },
-  { type: "command", text: " backspace init", delay: 600 },
+  { type: "command", text: " backspace-ai init", delay: 600 },
   { type: "success", text: "✓ Backspace initialized (.backspace/local.db created)", delay: 1200 },
-  { type: "output", text: "  Encryption key generated (AES-256-GCM)", delay: 1600 },
-  { type: "output", text: "  File watcher ready", delay: 1900 },
-  { type: "blank", text: "", delay: 2200 },
-  { type: "prompt", text: "~/my-project", delay: 2400 },
-  { type: "command", text: " backspace watch", delay: 3000 },
-  { type: "success", text: "✓ Daemon started (PID 48291)", delay: 3600 },
-  { type: "output", text: "  Watching 1,247 files for changes...", delay: 4000 },
-  { type: "blank", text: "", delay: 4300 },
-  { type: "output", text: "  [Snapshot] 4 files changed — \"refactor auth middleware\"", delay: 5000 },
-  { type: "output", text: "  [Snapshot] 12 files changed — \"add user dashboard\"", delay: 5800 },
-  { type: "error", text: "  [Snapshot] 47 files changed — AI hallucination detected", delay: 6600 },
-  { type: "blank", text: "", delay: 7200 },
-  { type: "prompt", text: "~/my-project", delay: 7400 },
-  { type: "command", text: " backspace revert", delay: 8000 },
-  { type: "success", text: "✓ 47 files reverted to pre-AI state", delay: 8600 },
-  { type: "success", text: "✓ Build passing. Tests green. Crisis averted.", delay: 9200 },
+  { type: "output", text: "  File watcher ready", delay: 1600 },
+  { type: "blank", text: "", delay: 1900 },
+  { type: "prompt", text: "~/my-project", delay: 2100 },
+  { type: "command", text: " backspace-ai watch", delay: 2700 },
+  { type: "success", text: "✓ Daemon started", delay: 3300 },
+  { type: "output", text: "  Watching for changes...", delay: 3700 },
+  { type: "blank", text: "", delay: 4000 },
+  { type: "output", text: "  [Snapshot] 4 files changed — \"refactor auth middleware\"", delay: 4800 },
+  { type: "output", text: "  [Snapshot] 12 files changed — \"add user dashboard\"", delay: 5600 },
+  { type: "error", text: "  [Snapshot] 15 files changed — AI broke the build", delay: 6400 },
+  { type: "blank", text: "", delay: 7000 },
+  { type: "prompt", text: "~/my-project", delay: 7200 },
+  { type: "command", text: " backspace-ai revert", delay: 7800 },
+  { type: "success", text: "✓ Successfully reverted codebase to selected state.", delay: 8400 },
+  { type: "success", text: "✓ Build passing. Crisis averted.", delay: 9000 },
 ];
 
 export default function TerminalDemo() {
@@ -85,7 +84,7 @@ export default function TerminalDemo() {
         <div className="terminal-dot bg-[#ff5f57]" />
         <div className="terminal-dot bg-[#febc2e]" />
         <div className="terminal-dot bg-[#28c840]" />
-        <span className="ml-3 text-xs text-white/30 font-mono">backspace — zsh</span>
+        <span className="ml-3 text-xs text-white/30 font-mono">backspace-ai — zsh</span>
       </div>
 
       {/* Terminal Body */}

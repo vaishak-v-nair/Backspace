@@ -7,37 +7,36 @@ const steps = [
   {
     step: "01",
     title: "Initialize",
-    description: "Run one command in your project root. Backspace creates a local encrypted database and starts tracking.",
-    code: `$ backspace init
-✓ Created .backspace/local.db
-✓ Encryption key generated
-✓ Ready to watch`,
+    description: "Run one command in your project root. Backspace creates a local SQLite database and gets ready to track changes.",
+    code: `$ backspace-ai init
+✓ Backspace initialized successfully!
+  Created .backspace/local.db
+  Ready to watch`,
     accent: "#00ff88",
   },
   {
     step: "02",
     title: "Code with AI",
     description: "Work normally. Use Claude, Cursor, Copilot — any AI tool. Backspace silently captures every change in the background.",
-    code: `$ backspace watch
-✓ Daemon running (PID 48291)
-  Watching 1,247 files...
+    code: `$ backspace-ai watch
+✓ Daemon started
+  Watching for changes...
 
-  [14:23:01] 4 files → "add auth"
-  [14:23:45] 12 files → "refactor db"
-  [14:24:12] 47 files → AI burst`,
+  [Snapshot] 4 files → "add auth"
+  [Snapshot] 12 files → "refactor db"
+  [Snapshot] 15 files → "update API"`,
     accent: "#8b5cf6",
   },
   {
     step: "03",
     title: "Revert Instantly",
     description: "AI broke something? Select a snapshot and every file snaps back to exactly how it was. Deterministic. Atomic. Instant.",
-    code: `$ backspace revert
+    code: `$ backspace-ai revert
 ? Select snapshot:
-  ❯ 14:24:12 — 47 files (AI burst)
-    14:23:45 — 12 files (refactor)
+  ❯ 15 files — "update API"
+    12 files — "refactor db"
 
-✓ 47 files reverted in 0.3s
-✓ Build passing. Tests green.`,
+✓ Successfully reverted codebase.`,
     accent: "#00ff88",
   },
 ];

@@ -7,10 +7,27 @@ export default function ProblemSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
+  /*
+   * These stats describe the PROBLEM that Backspace solves.
+   * They are framed as realistic scenarios, not measured from a specific session.
+   * The phrasing uses "up to" / "can" to stay honest about the range.
+   */
   const stats = [
-    { value: "47", label: "files modified", sublabel: "in a single AI session" },
-    { value: "12", label: "debug iterations", sublabel: "trying to fix the mess" },
-    { value: "$18", label: "burned in tokens", sublabel: "on failed recovery attempts" },
+    {
+      value: "dozens",
+      label: "of files changed",
+      sublabel: "in a single AI coding session",
+    },
+    {
+      value: "~3×",
+      label: "debug iterations",
+      sublabel: "to manually locate and fix each broken file",
+    },
+    {
+      value: "1.5 min",
+      label: "per file to restore",
+      sublabel: "hunting diffs, reading patches, reverting by hand",
+    },
   ];
 
   return (

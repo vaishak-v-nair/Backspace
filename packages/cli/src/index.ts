@@ -8,7 +8,10 @@
 import { Command } from 'commander';
 import { initTelemetry, captureException } from './telemetry.js';
 import { initCommand } from './commands/init.js';
-import { watchCommand } from './commands/watch.js';
+import { stopCommand } from './commands/stop.js';
+import { statusCommand } from './commands/status.js';
+import { logCommand } from './commands/log.js';
+import { showCommand } from './commands/show.js';
 import { revertCommand } from './commands/revert.js';
 import { loginCommand } from './commands/login.js';
 import { joinCommand } from './commands/join.js';
@@ -21,8 +24,6 @@ import path from 'path';
 // Internal hidden routing flags passed down by the supervisor instance
 if (process.argv[2] === "__daemon-worker") {
   const cliRootEntryPoint = process.argv[1];
-  // Convert current runtime path down to execute daemon.ts smoothly
-  // Note: Since we are running with tsx in dev, we point to daemon.ts
   const daemonTargetFile = path.join(path.dirname(cliRootEntryPoint), "daemon.ts");
   runSupervisorWorkerLoop(daemonTargetFile);
 } else {
@@ -36,11 +37,11 @@ initTelemetry();
 const program = new Command();
 
 program
-  .name('backspace')
-  .description('Deterministic state management for AI coding sessions')
+  .name('backspace-ai')
+  .description('Deterministic rollback for AI-assisted coding sessions')
   .version('0.1.0');
 
-// ── Command Registration ─────────────────────────────────────────────────────
+// ── Core Commands ────────────────────────────────────────────────────────────
 
 program
   .command('init')
@@ -49,16 +50,38 @@ program
 
 program
   .command('watch')
-  .description('Launch the indestructible background file tracking pipeline')
+  .description('Start the background file watcher daemon')
   .action(() => {
     const mainCliExecutablePath = process.argv[1];
     startSupervisedDaemon(mainCliExecutablePath);
   });
 
 program
+  .command('stop')
+  .description('Stop the background daemon')
+  .action(stopCommand);
+
+program
+  .command('status')
+  .description('Show current Backspace status (init state, daemon, DB size)')
+  .action(statusCommand);
+
+program
+  .command('log')
+  .description('List all recorded snapshots')
+  .action(logCommand);
+
+program
+  .command('show <id>')
+  .description('Pretty-print diffs for a specific snapshot')
+  .action(showCommand);
+
+program
   .command('revert')
-  .description('Roll back to a previous deterministic codebase state')
+  .description('Interactively select and revert to a previous snapshot')
   .action(revertCommand);
+
+// ── Extended Commands ────────────────────────────────────────────────────────
 
 program
   .command('login')
@@ -67,7 +90,7 @@ program
 
 program
   .command('join')
-  .description('Join an existing project from a remote repository')
+  .description('Join the beta waitlist')
   .action(joinCommand);
 
 program
@@ -84,10 +107,6 @@ program
   .command('mcp')
   .description('Start the Backspace MCP server')
   .action(mcpCommand);
-
-// ── Future Commands (Placeholders) ───────────────────────────────────────────
-// program.command('log').description('...')
-// program.command('show').description('...')
 
 // ── Parse (wrapped to capture unhandled errors) ──────────────────────────────
 
