@@ -42,15 +42,15 @@ export default function TokenCalculator() {
   const time = files * MINUTES_PER_FILE;
 
   return (
-    <section id="calculator" ref={ref} className="py-28 sm:py-36 px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-28" />
+    <section id="calculator" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
       <div className="mx-auto max-w-[1200px]" ref={innerRef}>
         <p className="section-tag mb-6">
           <span className="num">§ 04</span> · Token Calculator
         </p>
 
         {/* Split grid: text left, calculator right */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20">
           {/* Left */}
           <div>
             <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15] mb-6">
@@ -72,9 +72,9 @@ export default function TokenCalculator() {
                 { left: "Cost rate", right: `$${COST_PER_MILLION.toFixed(2)} / 1M tokens (Claude Sonnet)` },
                 { left: "Manual revert", right: `${MINUTES_PER_FILE} min / file` },
               ].map((row, i) => (
-                <div key={row.left} className={`flex justify-between py-3 ${i > 0 ? "border-t border-[#2a2520]" : ""}`}>
+                <div key={row.left} className={`flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-4 py-3 ${i > 0 ? "border-t border-[#2a2520]" : ""}`}>
                   <span className="text-[#8a7f72]">{row.left}</span>
-                  <span className="text-[#c8bfb0] font-mono">{row.right}</span>
+                  <span className="text-[#c8bfb0] font-mono text-[11px] sm:text-[12px]">{row.right}</span>
                 </div>
               ))}
             </div>
@@ -82,7 +82,7 @@ export default function TokenCalculator() {
 
           {/* Right: interactive calculator */}
           <div className="flex flex-col justify-center">
-            <div className="rounded-lg border border-[#2a2520] bg-[#100e0b] p-6">
+            <div className="rounded-lg border border-[#2a2520] bg-[#100e0b] p-4 sm:p-6">
               {/* Slider */}
               <div className="mb-6">
                 <div className="flex justify-between items-baseline mb-3">
@@ -97,17 +97,17 @@ export default function TokenCalculator() {
               </div>
 
               {/* Results */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-4 text-center">
-                  <div className="text-xl font-bold text-[#8b5cf6] tabular-nums">{(tokens / 1000).toFixed(0)}k</div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-3 sm:p-4 text-center">
+                  <div className="text-base sm:text-xl font-bold text-[#8b5cf6] tabular-nums">{(tokens / 1000).toFixed(0)}k</div>
                   <div className="text-[10px] text-[#5c5347] mt-1">tokens saved</div>
                 </div>
-                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-4 text-center">
-                  <div className="text-xl font-bold text-[#e8a830] tabular-nums">${cost.toFixed(2)}</div>
+                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-3 sm:p-4 text-center">
+                  <div className="text-base sm:text-xl font-bold text-[#e8a830] tabular-nums">${cost.toFixed(2)}</div>
                   <div className="text-[10px] text-[#5c5347] mt-1">cost saved</div>
                 </div>
-                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-4 text-center">
-                  <div className="text-xl font-bold text-[#34d399] tabular-nums">{time.toFixed(0)}m</div>
+                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-3 sm:p-4 text-center">
+                  <div className="text-base sm:text-xl font-bold text-[#34d399] tabular-nums">{time.toFixed(0)}m</div>
                   <div className="text-[10px] text-[#5c5347] mt-1">time saved</div>
                 </div>
               </div>

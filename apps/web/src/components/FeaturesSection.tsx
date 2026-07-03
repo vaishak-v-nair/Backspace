@@ -38,8 +38,8 @@ export default function FeaturesSection() {
   }, []);
 
   return (
-    <section id="features" ref={ref} className="py-28 sm:py-36 px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-28" />
+    <section id="features" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
       <div className="mx-auto max-w-[1200px]">
         <div ref={headRef} className="mb-16">
           <p className="section-tag mb-6">

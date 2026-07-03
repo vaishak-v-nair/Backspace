@@ -14,7 +14,7 @@ export default function Footer() {
           <a href="#how-it-works" className="hover:text-[#c8bfb0] transition-colors">Workflow</a>
           <a href="https://www.npmjs.com/package/backspace-ai" target="_blank" rel="noopener noreferrer"
             className="hover:text-[#c8bfb0] transition-colors">npm</a>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+          <a href="https://github.com/vaishak-v-nair/Backspace" target="_blank" rel="noopener noreferrer"
             className="hover:text-[#c8bfb0] transition-colors">GitHub</a>
         </div>
 

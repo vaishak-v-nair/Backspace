@@ -24,8 +24,8 @@ export default function TrustSection() {
   }, []);
 
   return (
-    <section id="trust" ref={ref} className="py-28 sm:py-36 px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-28" />
+    <section id="trust" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
       <div className="mx-auto max-w-[1200px]" ref={innerRef}>
         {/* Section label */}
         <p className="section-tag mb-10">
@@ -33,7 +33,7 @@ export default function TrustSection() {
         </p>
 
         {/* Split grid: text left, visual right */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20">
           {/* Left: copy */}
           <div>
             <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15] mb-6">

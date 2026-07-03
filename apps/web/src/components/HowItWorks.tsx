@@ -68,10 +68,10 @@ export default function HowItWorks() {
   }, []);
 
   return (
-    <section id="how-it-works" ref={ref} className="py-28 sm:py-36 px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-28" />
+    <section id="how-it-works" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
       <div className="mx-auto max-w-[1200px]">
-        <div ref={headRef} className="mb-20">
+        <div ref={headRef} className="mb-12 sm:mb-20">
           <p className="section-tag mb-6">
             <span className="num">§ 03</span> · How it Works
           </p>
@@ -86,7 +86,7 @@ export default function HowItWorks() {
         <div ref={listRef} className="space-y-6">
           {steps.map((step, i) => (
             <div key={step.num}
-              className={`grid grid-cols-1 ${i % 2 === 0 ? "md:grid-cols-[1fr_1.2fr]" : "md:grid-cols-[1.2fr_1fr]"} gap-8 rounded-lg border border-[#2a2520] bg-[#100e0b]/50 p-7 md:p-8`}>
+              className={`grid grid-cols-1 ${i % 2 === 0 ? "md:grid-cols-[1fr_1.2fr]" : "md:grid-cols-[1.2fr_1fr]"} gap-6 sm:gap-8 rounded-lg border border-[#2a2520] bg-[#100e0b]/50 p-5 sm:p-7 md:p-8`}>
               
               {/* Text — swap order on odd rows */}
               <div className={`flex flex-col justify-center ${i % 2 !== 0 ? "md:order-2" : ""}`}>

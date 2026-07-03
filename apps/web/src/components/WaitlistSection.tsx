@@ -40,8 +40,8 @@ export default function WaitlistSection() {
   };
 
   return (
-    <section id="updates" ref={ref} className="py-28 sm:py-36 px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-28" />
+    <section id="updates" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
       <div className="mx-auto max-w-[520px] text-center" ref={innerRef}>
         <p className="section-tag mb-6">
           <span className="num">§ 05</span> · Stay Updated
@@ -64,7 +64,7 @@ export default function WaitlistSection() {
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
             <input
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com" required disabled={status === "loading"}

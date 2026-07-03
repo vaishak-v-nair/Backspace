@@ -52,7 +52,7 @@ export default function Navbar() {
 
           {/* Right */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/vaishak-v-nair/Backspace" target="_blank" rel="noopener noreferrer"
               className="text-[12px] text-[#8a7f72] hover:text-[#f5f0e8] transition-colors">
               GitHub
             </a>
@@ -79,6 +79,14 @@ export default function Navbar() {
             <a key={l.label} href={l.href} onClick={e => go(e, l.href)}
               className="block text-[13px] text-[#c8bfb0] hover:text-[#f5f0e8] py-2.5">{l.label}</a>
           ))}
+          <div className="border-t border-[#2a2520] mt-2 pt-3 flex flex-col gap-2">
+            <a href="https://github.com/vaishak-v-nair/Backspace" target="_blank" rel="noopener noreferrer"
+              className="text-[13px] text-[#8a7f72] hover:text-[#f5f0e8] py-1.5">GitHub</a>
+            <a href="https://www.npmjs.com/package/backspace-ai" target="_blank" rel="noopener noreferrer"
+              className="text-center text-[11px] tracking-[0.08em] uppercase text-[#8b5cf6] border border-[#8b5cf6]/20 rounded-md px-3.5 py-2 hover:bg-[#8b5cf6]/10 transition-all">
+              Install Backspace →
+            </a>
+          </div>
         </div>
       )}
     </>
