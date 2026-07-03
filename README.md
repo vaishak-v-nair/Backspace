@@ -20,8 +20,8 @@
 
 <br/>
 
-<!-- TODO: Record a 15-second terminal GIF showing an AI hallucination being reverted instantly and place it here -->
-> 🎬 **[Demo Video Coming Soon]** — Watch Backspace instantly revert a 23-file AI hallucination.
+<!-- TODO: Add a screenshot showing a real project being broken by AI and then restored by Backspace -->
+> 🎬 **[Demo Video/Screenshot Coming Soon]** — Watch Backspace instantly revert a 23-file AI hallucination.
 
 </div>
 
@@ -29,13 +29,16 @@
 
 ## The Problem
 
-AI coding agents (Claude Code, Cursor, Copilot, Aider) are powerful — but **non-deterministic**. A single hallucination can:
+AI coding agents can modify hundreds of files in minutes.
 
-- **Corrupt** your business logic across 23 files
-- **Delete** critical config files during a "refactor"
-- **Drain** your API budget looping on its own mistakes
+When something goes wrong, developers often have to:
 
-`git stash` is too coarse. `Ctrl+Z` doesn't work across files. By the time you notice, the damage is done.
+- Search through chat history
+- Revert Git commits
+- Manually identify AI-generated changes
+- Lose unrelated work during rollback
+
+Backspace was built to make AI-generated changes reversible.
 
 ## The Solution
 
@@ -67,6 +70,37 @@ $ backspace-ai watch
 $ backspace-ai revert
 ✓ 23 files reverted in 47ms
 ```
+
+---
+
+## Why Not Git?
+
+Git was designed for humans writing code.
+
+Backspace is designed for AI modifying code.
+
+| Git | Backspace |
+|------|------|
+| Manual commits | Automatic AI snapshots |
+| Tracks developer actions | Tracks AI actions |
+| Commit rollback | AI operation rollback |
+| Human workflow | AI workflow |
+
+---
+
+## Use Cases
+
+### AI broke authentication
+Restore the project before the AI touched auth.
+
+### AI refactored 50 files incorrectly
+Rollback only that AI action.
+
+### AI deleted important logic
+Recover instantly.
+
+### Experiment safely
+Try aggressive prompts without fear.
 
 ---
 
@@ -203,34 +237,31 @@ backspace-ai integrate claude
 
 ## Architecture
 
-```
-backspace/
-├── packages/
-│   └── cli/                    # Core Node.js daemon & CLI
-│       ├── src/
-│       │   ├── index.ts        # Commander entrypoint (binary: backspace-ai)
-│       │   ├── daemon.ts       # Chokidar watcher + diff pipeline
-│       │   ├── supervisor.ts   # Detached process manager
-│       │   ├── db.ts           # SQLite WAL storage layer
-│       │   ├── crypto.ts       # AES-256-GCM encryption pipeline
-│       │   ├── sniffer.ts      # AI prompt detection engine
-│       │   ├── analysis.ts     # Risk scoring & pattern analysis
-│       │   ├── mcp.ts          # Model Context Protocol server
-│       │   └── commands/       # CLI command handlers
-│       └── dist/               # Built output (tsup)
-├── apps/
-│   └── web/                    # Next.js marketing site
-├── packages/
-│   └── extension/              # VS Code extension (coming soon)
-└── docs/                       # Documentation
+```text
+AI Assistant
+      │
+      ▼
+ Change Tracker
+      │
+      ▼
+ Snapshot Engine
+      │
+      ▼
+ Recovery Layer
+      │
+      ▼
+ One-Click Rollback
 ```
 
-### Key Design Decisions
+### Engineering Challenges
 
-- **Local-first**: SQLite WAL mode for concurrent writes during rapid AI mutations
-- **Encryption**: AES-256-GCM with per-project keys + Brotli compression
-- **Detached daemon**: Supervisor pattern — `watch` returns immediately, daemon lives in background
-- **Prompt sniffing**: Passive detection of AI tool prompts for session labeling
+Building Backspace required solving:
+
+- Efficient snapshot storage (SQLite WAL mode for concurrent AI writes)
+- Fast rollback performance (AES-256-GCM encrypted reverse patching)
+- Change tracking across AI sessions
+- Workspace state recovery
+- Minimal developer friction
 
 See the full [Architecture Guide →](docs/architecture.md)
 
@@ -271,6 +302,18 @@ Over a month of daily AI coding, Backspace can save **$15-50 in API costs** and 
 - [ ] Plugin ecosystem
 
 See the full [Product Roadmap →](docs/roadmap.md)
+
+---
+
+# The Future
+
+Backspace started as an undo system.
+
+The long-term vision is becoming the safety layer for AI-assisted software development.
+
+As AI agents become more autonomous, developers need visibility, recovery, and control over machine-generated changes.
+
+Backspace aims to provide that layer.
 
 ---
 

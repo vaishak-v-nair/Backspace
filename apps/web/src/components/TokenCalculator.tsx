@@ -46,7 +46,7 @@ export default function TokenCalculator() {
       <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
       <div className="mx-auto max-w-[1200px]" ref={innerRef}>
         <p className="section-tag mb-6">
-          <span className="num">§ 04</span> · Token Calculator
+          <span className="num">§ 06</span> · Token Calculator
         </p>
 
         {/* Split grid: text left, calculator right */}

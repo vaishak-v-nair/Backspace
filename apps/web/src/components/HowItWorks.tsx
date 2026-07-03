@@ -73,7 +73,7 @@ export default function HowItWorks() {
       <div className="mx-auto max-w-[1200px]">
         <div ref={headRef} className="mb-12 sm:mb-20">
           <p className="section-tag mb-6">
-            <span className="num">§ 03</span> · How it Works
+            <span className="num">§ 05</span> · How it Works
           </p>
           <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15]">
             Three commands.

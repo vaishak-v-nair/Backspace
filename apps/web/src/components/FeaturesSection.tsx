@@ -43,7 +43,7 @@ export default function FeaturesSection() {
       <div className="mx-auto max-w-[1200px]">
         <div ref={headRef} className="mb-16">
           <p className="section-tag mb-6">
-            <span className="num">§ 02</span> · Features
+            <span className="num">§ 04</span> · Features
           </p>
           <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15]">
             Everything you need to code
