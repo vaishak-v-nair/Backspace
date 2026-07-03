@@ -16,12 +16,12 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-7c3aed.svg?style=flat-square)](https://github.com/vaishak-v-nair/Backspace/blob/main/CONTRIBUTING.md)
 
-[Website](https://backspace-three.vercel.app) · [Documentation](docs/) · [CLI Reference](docs/cli-reference.md) · [Contributing](CONTRIBUTING.md)
+[Website](https://backspace-three.vercel.app) · [Documentation](docs/README.md) · [CLI Reference](docs/cli-reference.md) · [Contributing](CONTRIBUTING.md)
 
 <br/>
 
-<!-- TODO: Add a 15-second terminal GIF here showing an AI hallucination being reverted instantly -->
-![Backspace Demo Placeholder](https://via.placeholder.com/800x400.png?text=15-Second+Terminal+GIF+Demo+Here)
+<!-- TODO: Record a 15-second terminal GIF showing an AI hallucination being reverted instantly and place it here -->
+> 🎬 **[Demo Video Coming Soon]** — Watch Backspace instantly revert a 23-file AI hallucination.
 
 </div>
 
