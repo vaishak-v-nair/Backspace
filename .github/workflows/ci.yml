@@ -50,6 +50,9 @@ jobs:
         working-directory: packages/extension
         run: npm run build
 
-      # ── Future: unit tests ───────────────────────────────────
-      # - name: Run tests
-      #   run: npm test --workspaces --if-present
+      # ── Web app ──────────────────────────────────────────────
+      - name: Build Web
+        working-directory: apps/web
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1

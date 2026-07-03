@@ -1,21 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Creates an authenticated Supabase client using a Clerk session token.
- * This guarantees that Supabase Row-Level Security (RLS) policies 
- * can read the correct `auth.uid()`.
+ * Creates a Supabase admin client using the service role key.
+ * Only use server-side (API routes, server actions).
  */
-export function createClerkSupabaseClient(clerkToken: string) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        // Forward the Clerk JWT to Supabase
-        headers: {
-          Authorization: `Bearer ${clerkToken}`,
-        },
-      },
-    }
-  );
+export function createSupabaseAdmin() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are not configured.");
+  }
+
+  return createClient(url, key);
 }

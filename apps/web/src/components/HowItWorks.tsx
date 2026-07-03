@@ -1,126 +1,121 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const steps = [
   {
-    step: "01",
+    num: "01",
     title: "Initialize",
-    description: "Run one command in your project root. Backspace creates a local SQLite database and gets ready to track changes.",
-    code: `$ backspace-ai init
-✓ Backspace initialized successfully!
-  Created .backspace/local.db
-  Ready to watch`,
-    accent: "#00ff88",
+    desc: "One command creates an encrypted local store. No YAML, no config files, no accounts required.",
+    lines: [
+      { text: "$ backspace-ai init", cls: "t-cmd" },
+      { text: "✓ Backspace initialized", cls: "t-ok" },
+      { text: "  .backspace/local.db · AES-256-GCM", cls: "t-dim" },
+    ],
   },
   {
-    step: "02",
+    num: "02",
     title: "Code with AI",
-    description: "Work normally. Use Claude, Cursor, Copilot — any AI tool. Backspace silently captures every change in the background.",
-    code: `$ backspace-ai watch
-✓ Daemon started
-  Watching for changes...
-
-  [Snapshot] 4 files → "add auth"
-  [Snapshot] 12 files → "refactor db"
-  [Snapshot] 15 files → "update API"`,
-    accent: "#8b5cf6",
+    desc: "Work normally with any AI coding tool. Backspace captures every file change silently in the background.",
+    lines: [
+      { text: "$ backspace-ai watch", cls: "t-cmd" },
+      { text: "✓ Daemon started (PID: 42891)", cls: "t-ok" },
+      { text: "  Watching for changes...", cls: "t-dim" },
+      { text: "", cls: "" },
+      { text: '  [snap] 4 files → "add auth"', cls: "t-cyan" },
+      { text: '  [snap] 12 files → "refactor db"', cls: "t-cyan" },
+      { text: '  [snap] 23 files → "migrate API"', cls: "t-cyan" },
+    ],
   },
   {
-    step: "03",
+    num: "03",
     title: "Revert Instantly",
-    description: "AI broke something? Select a snapshot and every file snaps back to exactly how it was. Deterministic. Atomic. Instant.",
-    code: `$ backspace-ai revert
-? Select snapshot:
-  ❯ 15 files — "update API"
-    12 files — "refactor db"
-
-✓ Successfully reverted codebase.`,
-    accent: "#00ff88",
+    desc: "AI broke something? One command reverses every change. Atomically. In milliseconds.",
+    lines: [
+      { text: "$ backspace-ai revert", cls: "t-cmd" },
+      { text: "? Select snapshot:", cls: "t-amber" },
+      { text: '  ❯ 23 files — "migrate API"', cls: "t-ok" },
+      { text: "", cls: "" },
+      { text: "✓ 23 files reverted in 47ms", cls: "t-ok" },
+    ],
   },
 ];
 
 export default function HowItWorks() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  const ref = useRef<HTMLElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(headRef.current, {
+        opacity: 0, y: 16, duration: 0.6, ease: "power3.out",
+        scrollTrigger: { trigger: ref.current, start: "top 80%", once: true },
+      });
+      if (listRef.current) {
+        gsap.from(listRef.current.children, {
+          opacity: 0, y: 20, duration: 0.5, stagger: 0.1, ease: "power3.out",
+          scrollTrigger: { trigger: listRef.current, start: "top 85%", once: true },
+        });
+      }
+    }, ref);
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section id="how-it-works" ref={ref} className="relative py-32 px-6">
-      <div className="mx-auto max-w-5xl">
-        {/* Section heading */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center text-xs uppercase tracking-[0.3em] text-white/30 mb-6"
-        >
-          How it Works
-        </motion.p>
+    <section id="how-it-works" ref={ref} className="py-28 sm:py-36 px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-28" />
+      <div className="mx-auto max-w-[1200px]">
+        <div ref={headRef} className="mb-20">
+          <p className="section-tag mb-6">
+            <span className="num">§ 03</span> · How it Works
+          </p>
+          <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15]">
+            Three commands.
+            <br />
+            <span className="text-[#5c5347]">That&apos;s the</span> <span className="serif-accent">entire</span> <span className="text-[#5c5347]">workflow.</span>
+          </h2>
+        </div>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center text-3xl font-semibold tracking-tight md:text-5xl mb-20"
-        >
-          Three commands.
-          <br />
-          <span className="text-white/30">That&apos;s the entire workflow.</span>
-        </motion.h2>
-
-        {/* Steps */}
-        <div className="space-y-6">
+        {/* Steps — split grid like Caveman */}
+        <div ref={listRef} className="space-y-6">
           {steps.map((step, i) => (
-            <motion.div
-              key={step.step}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.2 + i * 0.15 }}
-              className="relative grid grid-cols-1 md:grid-cols-2 gap-8 rounded-2xl border border-white/[0.04] bg-white/[0.01] p-8 md:p-10"
-            >
-              {/* Left: Text */}
-              <div className="flex flex-col justify-center">
-                <div
-                  className="mb-4 inline-flex items-center gap-3"
-                >
-                  <span
-                    className="text-xs font-mono font-bold tracking-wider px-2.5 py-1 rounded-md"
-                    style={{
-                      backgroundColor: `${step.accent}15`,
-                      color: step.accent,
-                    }}
-                  >
-                    STEP {step.step}
-                  </span>
-                </div>
-                <h3 className="text-2xl font-semibold mb-3">{step.title}</h3>
-                <p className="text-white/40 leading-relaxed">{step.description}</p>
+            <div key={step.num}
+              className={`grid grid-cols-1 ${i % 2 === 0 ? "md:grid-cols-[1fr_1.2fr]" : "md:grid-cols-[1.2fr_1fr]"} gap-8 rounded-lg border border-[#2a2520] bg-[#100e0b]/50 p-7 md:p-8`}>
+              
+              {/* Text — swap order on odd rows */}
+              <div className={`flex flex-col justify-center ${i % 2 !== 0 ? "md:order-2" : ""}`}>
+                <span className="text-[10px] tracking-[0.2em] uppercase text-[#8b5cf6] font-medium mb-3">
+                  Step {step.num}
+                </span>
+                <h3 className="text-xl font-semibold text-[#f5f0e8] mb-2">{step.title}</h3>
+                <p className="text-[13px] text-[#8a7f72] leading-relaxed">{step.desc}</p>
               </div>
 
-              {/* Right: Code */}
-              <div className="terminal">
-                <div className="terminal-header">
-                  <div className="terminal-dot bg-[#ff5f57]" />
-                  <div className="terminal-dot bg-[#febc2e]" />
-                  <div className="terminal-dot bg-[#28c840]" />
-                </div>
-                <div className="terminal-body text-xs leading-relaxed">
-                  {step.code.split("\n").map((line, j) => {
-                    let className = "terminal-output";
-                    if (line.startsWith("$")) className = "terminal-command";
-                    else if (line.startsWith("✓")) className = "terminal-success";
-                    else if (line.startsWith("  ❯")) className = "text-[#00ff88]";
-                    else if (line.startsWith("?")) className = "text-[#8b5cf6]";
-                    return (
-                      <div key={j} className={className}>
-                        {line}
+              {/* Terminal */}
+              <div className={`${i % 2 !== 0 ? "md:order-1" : ""}`}>
+                <div className="terminal">
+                  <div className="terminal-bar">
+                    <div className="terminal-dot bg-[#ff5f57]" />
+                    <div className="terminal-dot bg-[#febc2e]" />
+                    <div className="terminal-dot bg-[#28c840]" />
+                    <span className="terminal-title">terminal</span>
+                  </div>
+                  <div className="terminal-body">
+                    {step.lines.map((line, j) => (
+                      <div key={j} className={line.cls || "t-dim"}>
+                        {line.text || "\u00A0"}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

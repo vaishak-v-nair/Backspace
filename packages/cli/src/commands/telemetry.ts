@@ -1,54 +1,18 @@
 /**
- * commands/telemetry.ts — `backspace telemetry` command
+ * commands/telemetry.ts — `backspace-ai telemetry`
  *
- * Subcommands:
- *   backspace telemetry status   — Show whether telemetry is enabled
- *   backspace telemetry enable   — Opt in to anonymous crash reporting
- *   backspace telemetry disable  — Opt out of crash reporting
+ * Backspace is a strict local-first product.
+ * Telemetry is permanently disabled by design — zero bytes leave the machine.
  */
 
 import chalk from 'chalk';
-import { isTelemetryEnabled, setTelemetryEnabled } from '../telemetry.js';
 
-export function telemetryCommand(action?: string): void {
-  switch (action) {
-    case 'enable': {
-      setTelemetryEnabled(true);
-      console.log(
-        chalk.green.bold('✓ Telemetry enabled.') + '\n' +
-        chalk.dim('  Anonymous crash reports help us fix bugs faster.\n') +
-        chalk.dim('  No file paths, code, or personal data are ever sent.')
-      );
-      break;
-    }
-
-    case 'disable': {
-      setTelemetryEnabled(false);
-      console.log(
-        chalk.yellow.bold('✗ Telemetry disabled.') + '\n' +
-        chalk.dim('  No crash reports will be sent.\n') +
-        chalk.dim('  Run `backspace telemetry enable` to opt back in.')
-      );
-      break;
-    }
-
-    case 'status':
-    default: {
-      const enabled = isTelemetryEnabled();
-      if (enabled) {
-        console.log(
-          chalk.cyan('Telemetry: ') + chalk.green.bold('enabled') + '\n' +
-          chalk.dim('  Anonymous crash reports are being sent.\n') +
-          chalk.dim('  Run `backspace telemetry disable` to opt out.')
-        );
-      } else {
-        console.log(
-          chalk.cyan('Telemetry: ') + chalk.yellow.bold('disabled') + '\n' +
-          chalk.dim('  No data is being sent.\n') +
-          chalk.dim('  Run `backspace telemetry enable` to opt in.')
-        );
-      }
-      break;
-    }
-  }
+export function telemetryCommand() {
+  console.log('');
+  console.log(chalk.green.bold('  🔒 Telemetry: permanently disabled'));
+  console.log('');
+  console.log(chalk.dim('  Backspace is a strict local-first product.'));
+  console.log(chalk.dim('  Zero bytes of data will ever leave your machine.'));
+  console.log(chalk.dim('  No crash reports, no analytics, no phone-home — by design.'));
+  console.log('');
 }

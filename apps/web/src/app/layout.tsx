@@ -1,57 +1,42 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Backspace — Undo Anything Your AI Just Did",
   description:
-    "Local-first deterministic rollback for AI-assisted coding workflows. One command to revert any AI session. Your code never leaves your machine.",
+    "Deterministic rollback for AI-assisted coding. One command to revert any AI session. AES-256 encrypted. Fully local.",
   keywords: [
-    "AI coding",
-    "rollback",
-    "undo",
-    "developer tools",
-    "CLI",
-    "Claude Code",
-    "Cursor",
-    "Copilot",
-    "local-first",
-    "code safety",
+    "AI coding", "rollback", "undo", "developer tools", "CLI",
+    "Claude Code", "Cursor", "Copilot", "local-first",
   ],
   openGraph: {
     title: "Backspace — Undo Anything Your AI Just Did",
-    description:
-      "Claude broke your build? Cursor hallucinated across 47 files? One command. Every file restored. Zero tokens wasted.",
+    description: "Claude broke your build? One command. Every file restored.",
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Backspace — Undo Anything Your AI Just Did",
-    description:
-      "Local-first deterministic rollback for AI-assisted coding. One command to revert any AI session.",
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="bg-[#050505] text-white antialiased">
-      <body
-        className={`${inter.variable} ${geistMono.variable}`}
-      >
+    <html lang="en" className="antialiased scroll-smooth" style={{ background: "#0a0806", color: "#f5f0e8" }}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable}`}>
+        {/* Grain texture overlay (Caveman-style) */}
+        <div className="grain" aria-hidden="true" />
         {children}
       </body>
     </html>

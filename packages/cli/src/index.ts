@@ -10,22 +10,30 @@ import { initTelemetry, captureException } from './telemetry.js';
 import { initCommand } from './commands/init.js';
 import { stopCommand } from './commands/stop.js';
 import { statusCommand } from './commands/status.js';
+import { startDaemon } from './daemon.js';
 import { logCommand } from './commands/log.js';
 import { showCommand } from './commands/show.js';
 import { revertCommand } from './commands/revert.js';
+import { checkCommand } from './commands/check.js';
 import { loginCommand } from './commands/login.js';
 import { joinCommand } from './commands/join.js';
 import { telemetryCommand } from './commands/telemetry.js';
 import { integrateCommand } from './commands/integrate.js';
+import { timelineCommand } from './commands/timeline.js';
+import { inspectCommand } from './commands/inspect.js';
 import { mcpCommand } from './mcp.js';
-import { startSupervisedDaemon, runSupervisorWorkerLoop } from './supervisor.js';
-import path from 'path';
+import { startSupervisedDaemon } from './supervisor.js';
+import { BackspaceDB, isInitialized } from './db.js';
+import chalk from 'chalk';
 
-// Internal hidden routing flags passed down by the supervisor instance
+// Internal hidden routing flags passed down by the supervisor instance.
+// When launched as __daemon-worker, the daemon code is already bundled
+// in this same file via tsup — so we start it directly inline instead
+// of trying to spawn a separate daemon.ts that doesn't exist post-build.
 if (process.argv[2] === "__daemon-worker") {
-  const cliRootEntryPoint = process.argv[1];
-  const daemonTargetFile = path.join(path.dirname(cliRootEntryPoint), "daemon.ts");
-  runSupervisorWorkerLoop(daemonTargetFile);
+  // Session ID is passed via environment variable from the supervisor
+  const sessionId = process.env.BACKSPACE_SESSION_ID;
+  startDaemon({ cwd: process.cwd(), sessionId: sessionId ?? undefined });
 } else {
 
 // ── Telemetry (initialise before anything else) ──────────────────────────────
@@ -38,22 +46,47 @@ const program = new Command();
 
 program
   .name('backspace-ai')
-  .description('Deterministic rollback for AI-assisted coding sessions')
-  .version('0.1.0');
+  .description('AI Provenance Engine — deterministic rollback for AI-assisted coding')
+  .version('0.2.0');
 
 // ── Core Commands ────────────────────────────────────────────────────────────
 
 program
   .command('init')
   .description('Initialize Backspace in the current repository')
-  .action(initCommand);
+  .option('--local', 'SQLite only, nothing leaves your machine (default)', true)
+  .option('--sync', 'Enable client-side encrypted Supabase sync')
+  .action((opts) => initCommand(opts));
 
 program
   .command('watch')
   .description('Start the background file watcher daemon')
-  .action(() => {
-    const mainCliExecutablePath = process.argv[1];
-    startSupervisedDaemon(mainCliExecutablePath);
+  .option('--prompt <label>', 'Session label or prompt context')
+  .action((opts: { prompt?: string }) => {
+    const cwd = process.cwd();
+
+    if (!isInitialized(cwd)) {
+      console.error(
+        chalk.red('Backspace is not initialized in this directory.\n') +
+        chalk.dim('Run `backspace-ai init` first.'),
+      );
+      process.exit(1);
+    }
+
+    // Create a session in the database before launching the daemon
+    const db = BackspaceDB.open(cwd);
+    try {
+      const sessionId = crypto.randomUUID();
+      const prompt = opts.prompt ?? 'AI coding session';
+      db.createSession(sessionId, prompt);
+      console.log(chalk.green('✓') + chalk.bold(' Session created: ') + chalk.dim(sessionId.slice(0, 8)));
+
+      // Pass session ID to the daemon via environment variable
+      const mainCliExecutablePath = process.argv[1];
+      startSupervisedDaemon(mainCliExecutablePath, cwd, sessionId);
+    } finally {
+      db.close();
+    }
   });
 
 program
@@ -68,18 +101,41 @@ program
 
 program
   .command('log')
-  .description('List all recorded snapshots')
+  .description('List all recorded sessions and snapshots')
   .action(logCommand);
 
 program
   .command('show <id>')
-  .description('Pretty-print diffs for a specific snapshot')
+  .description('Pretty-print events/diffs for a session or snapshot')
   .action(showCommand);
 
 program
   .command('revert')
-  .description('Interactively select and revert to a previous snapshot')
-  .action(revertCommand);
+  .description('Revert all changes from a session or snapshot')
+  .option('--quiet', 'Suppress post-revert analysis output')
+  .option('--id <id>', 'Revert a specific session/snapshot by ID')
+  .option('--latest', 'Automatically revert the most recent session')
+  .action((opts) => revertCommand(opts));
+
+// ── Provenance Commands ──────────────────────────────────────────────────────
+
+program
+  .command('timeline')
+  .description('Show chronological timeline of all AI activity')
+  .option('--file <path>', 'Filter to a specific file')
+  .option('--limit <n>', 'Maximum events to show', '30')
+  .action((opts) => timelineCommand({ file: opts.file, limit: parseInt(opts.limit, 10) }));
+
+program
+  .command('inspect <event-id>')
+  .description('Show detailed provenance for a single event')
+  .action(inspectCommand);
+
+program
+  .command('check <prompt>')
+  .description('Analyze a prompt for risky patterns before starting an AI session')
+  .option('--force', 'Skip confirmation prompt on risky patterns')
+  .action((prompt, opts) => checkCommand(prompt, opts));
 
 // ── Extended Commands ────────────────────────────────────────────────────────
 
@@ -99,8 +155,8 @@ program
   .action(telemetryCommand);
 
 program
-  .command('integrate')
-  .description('Inject Backspace MCP config into Claude Desktop')
+  .command('integrate <tool>')
+  .description('Inject Backspace MCP config into a supported AI tool (e.g. claude)')
   .action(integrateCommand);
 
 program

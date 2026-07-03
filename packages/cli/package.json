@@ -1,10 +1,10 @@
 {
-  "name": "@backspace/cli",
+  "name": "backspace-ai",
   "version": "0.1.0",
-  "description": "Backspace CLI — deterministic state management for AI coding sessions",
+  "description": "Backspace CLI — deterministic rollback for AI-assisted coding sessions",
   "type": "module",
   "bin": {
-    "backspace": "./dist/index.js"
+    "backspace-ai": "./dist/index.js"
   },
   "files": [
     "dist"

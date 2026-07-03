@@ -1,211 +1,213 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Backspace — Design System
+   Inspired by getcaveman.dev: warm blacks, cream text, amber/violet accent,
+   serif italics for emphasis, subtle grain texture.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @theme {
-  --color-obsidian: #050505;
-  --color-surface: #0a0a0a;
-  --color-surface-hover: #111111;
-  --color-surface-elevated: #141414;
-  --color-border: #1a1a1a;
-  --color-border-hover: #2a2a2a;
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #52525b;
-  --color-accent: #00ff88;
-  --color-accent-dim: rgba(0, 255, 136, 0.15);
-  --color-accent-glow: rgba(0, 255, 136, 0.08);
-  --color-danger: #ff4444;
-  --color-danger-dim: rgba(255, 68, 68, 0.15);
+  /* Warm dark backgrounds (Caveman-style warm charcoal) */
+  --color-bg-0: #0a0806;
+  --color-bg-1: #100e0b;
+  --color-bg-2: #171310;
+  --color-bg-3: #1e1a16;
+
+  /* Warm borders */
+  --color-line: #2a2520;
+  --color-line-2: #3a3530;
+
+  /* Warm text */
+  --color-fg-0: #f5f0e8;
+  --color-fg-1: #c8bfb0;
+  --color-fg-2: #8a7f72;
+  --color-fg-3: #5c5347;
+
+  /* Accent: Electric Violet (brand) */
+  --color-accent: #8b5cf6;
+  --color-accent-dim: rgba(139, 92, 246, 0.12);
+
+  /* Secondary: Warm Amber (Caveman-inspired emphasis) */
+  --color-amber: #e8a830;
+  --color-amber-dim: rgba(232, 168, 48, 0.12);
+
+  /* Status */
+  --color-ok: #34d399;
+  --color-err: #f87171;
 }
 
 :root {
-  background-color: var(--color-obsidian);
-  color: var(--color-text-primary);
+  background-color: var(--color-bg-0);
+  color: var(--color-fg-0);
   color-scheme: dark;
-}
-
-* {
-  cursor: auto;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-geist), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  background: var(--color-bg-0);
 }
 
-code, pre {
-  font-family: var(--font-geist-mono), 'SF Mono', 'Fira Code', monospace;
+code, pre, .mono {
+  font-family: var(--font-jetbrains), 'SF Mono', 'Fira Code', monospace;
 }
 
-/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #222;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #333;
+/* Serif italic for emphasis (Caveman-style) */
+.serif-accent {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  color: var(--color-amber);
 }
 
-/* ─── Selection ────────────────────────────────────────────────────────────── */
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-line-2); }
+
 ::selection {
-  background-color: rgba(0, 255, 136, 0.25);
-  color: #fff;
+  background-color: rgba(139, 92, 246, 0.25);
+  color: var(--color-fg-0);
 }
 
-/* ─── Utility: Glow Effects ────────────────────────────────────────────────── */
+/* ─── Cursor fix for interactive elements ────────────────────────────── */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+summary {
+  cursor: pointer;
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────────── */
 @layer utilities {
-  .glow-accent {
-    box-shadow: 0 0 20px var(--color-accent-dim), 0 0 60px var(--color-accent-glow);
-  }
-  .glow-text-accent {
-    text-shadow: 0 0 20px var(--color-accent-dim);
-  }
   .glass {
-    background: rgba(10, 10, 10, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-  .glass-border {
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(10, 8, 6, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
 }
 
-/* ─── Keyframes ────────────────────────────────────────────────────────────── */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+/* ─── Grain Overlay (Caveman-style subtle noise) ─────────────────────── */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+/* ─── Dot Grid (very subtle warm dots) ───────────────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(245,240,232,0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* ─── Section Divider (warm gradient line) ───────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--color-line) 50%, transparent 100%);
 }
 
-@keyframes typing-cursor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+/* ─── Section Label (§ 01 style) ─────────────────────────────────────── */
+.section-tag {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+.section-tag .num {
+  color: var(--color-accent);
 }
 
-@keyframes grid-fade {
-  0% { opacity: 0; }
-  50% { opacity: 0.04; }
-  100% { opacity: 0.02; }
-}
-
-/* ─── Terminal Styling ─────────────────────────────────────────────────────── */
+/* ─── Terminal (Premium warm) ────────────────────────────────────────── */
 .terminal {
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  border-radius: 12px;
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
   overflow: hidden;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-jetbrains), monospace;
 }
-
-.terminal-header {
+.terminal-bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 16px;
-  background: #0f0f0f;
-  border-bottom: 1px solid #1a1a1a;
+  padding: 10px 14px;
+  background: var(--color-bg-2);
+  border-bottom: 1px solid var(--color-line);
 }
-
-.terminal-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.terminal-dot { width: 9px; height: 9px; border-radius: 50%; }
+.terminal-title {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--color-fg-3);
+  font-family: var(--font-jetbrains), monospace;
+  letter-spacing: 0.04em;
 }
-
 .terminal-body {
-  padding: 20px;
-  font-size: 13px;
-  line-height: 1.7;
-  color: #a1a1aa;
+  padding: 18px 20px;
+  font-size: 12px;
+  line-height: 1.85;
+  color: var(--color-fg-2);
 }
-
-.terminal-prompt {
-  color: #00ff88;
-}
-
-.terminal-command {
-  color: #fafafa;
-}
-
-.terminal-output {
-  color: #52525b;
-}
-
-.terminal-success {
-  color: #00ff88;
-}
-
-.terminal-error {
-  color: #ff4444;
-}
-
-.terminal-cursor {
+.t-cmd { color: var(--color-fg-0); }
+.t-prompt { color: var(--color-accent); }
+.t-ok { color: var(--color-ok); }
+.t-err { color: var(--color-err); }
+.t-dim { color: var(--color-fg-3); }
+.t-cyan { color: #67e8f9; }
+.t-amber { color: var(--color-amber); }
+.t-cursor {
   display: inline-block;
-  width: 8px;
-  height: 16px;
-  background: #00ff88;
-  animation: typing-cursor 1s infinite;
+  width: 7px;
+  height: 14px;
+  background: var(--color-accent);
+  animation: blink 1s step-end infinite;
   vertical-align: text-bottom;
   margin-left: 2px;
 }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
 
-/* ─── Grid Background ─────────────────────────────────────────────────────── */
-.grid-bg {
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-/* ─── Gradient Orb ─────────────────────────────────────────────────────────── */
-.gradient-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-}
-
-/* ─── Range Slider ─────────────────────────────────────────────────────────── */
+/* ─── Range Slider ───────────────────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
-  background: #1a1a1a;
+  height: 3px;
+  background: var(--color-line-2);
   border-radius: 2px;
   outline: none;
 }
-
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: #00ff88;
+  background: var(--color-accent);
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+  box-shadow: 0 0 12px rgba(139,92,246,0.4);
   transition: box-shadow 0.2s;
 }
-
 input[type="range"]::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+  box-shadow: 0 0 20px rgba(139,92,246,0.6);
+}
+
+/* ─── Mobile Terminal ────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .terminal-body {
+    padding: 14px 16px;
+    font-size: 10px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
 }

@@ -24,7 +24,7 @@ export function isDaemonRunning(cwd: string = process.cwd()): boolean {
 /**
  * Spawns the daemon process as a completely detached background supervisor worker loop.
  */
-export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = process.cwd()) {
+export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = process.cwd(), sessionId?: string) {
   const backspaceDir = getBackspaceDir(cwd);
   if (!fs.existsSync(backspaceDir)) {
     fs.mkdirSync(backspaceDir, { recursive: true, mode: 0o700 });
@@ -52,14 +52,34 @@ export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = p
   // Open log stream for tracking child process crashes
   const logStream = fs.openSync(logFile, "a");
 
-  // Spawn the child daemon process detached from the current terminal context
-  const child = spawn(execCmd, execArgs, {
-    detached: true,
-    cwd,
-    stdio: ["ignore", logStream, logStream],
-    env: { ...process.env, NODE_ENV: "production" },
-    shell: process.platform === 'win32'
-  });
+  // Spawn the child daemon process detached from the current terminal context.
+  // On Windows, paths with spaces (e.g. C:\Program Files\nodejs\node.exe) break
+  // when shell: true splits on whitespace. We build a single command string
+  // instead of passing args separately to avoid both the path splitting bug
+  // and the Node.js DEP0190 deprecation warning.
+  const isWin = process.platform === 'win32';
+  const child = isWin
+    ? spawn(`"${execCmd}" ${execArgs.map(a => `"${a}"`).join(' ')}`, [], {
+        detached: true,
+        cwd,
+        stdio: ["ignore", logStream, logStream],
+        env: {
+          ...process.env,
+          NODE_ENV: "production",
+          ...(sessionId ? { BACKSPACE_SESSION_ID: sessionId } : {}),
+        },
+        shell: true,
+      })
+    : spawn(execCmd, execArgs, {
+        detached: true,
+        cwd,
+        stdio: ["ignore", logStream, logStream],
+        env: {
+          ...process.env,
+          NODE_ENV: "production",
+          ...(sessionId ? { BACKSPACE_SESSION_ID: sessionId } : {}),
+        },
+      });
 
   if (child.pid) {
     // Write the verified PID immediately to disk

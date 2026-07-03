@@ -1,59 +1,116 @@
 <div align="center">
 
+<br/>
+
 # ⌫ Backspace
 
-**The Deterministic Undo Button for AI Agents.**
+### The Trust Layer for AI Coding.
 
-Stop burning tokens trying to fix what Claude Code just broke.
-
-[![Version](https://img.shields.io/npm/v/backspace-ai?style=for-the-badge)](https://www.npmjs.com/package/backspace-ai)
-[![License: MIT](https://img.shields.io/badge/License-MIT-white.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-
-[Website](https://backspace.dev) • [Documentation](#quick-start)
-</div>
+**Observe. Record. Revert. Every AI action, under your control.**
 
 <br/>
 
-## 🚀 The Problem
+[![npm version](https://img.shields.io/npm/v/backspace-ai?style=flat-square&color=7c3aed&label=npm)](https://www.npmjs.com/package/backspace-ai)
+[![License: MIT](https://img.shields.io/badge/license-MIT-white.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![CI](https://img.shields.io/github/actions/workflow/status/vaishak-v-nair/Backspace/ci.yml?style=flat-square&label=CI)](https://github.com/vaishak-v-nair/Backspace/actions)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square)](https://nodejs.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-7c3aed.svg?style=flat-square)](https://github.com/vaishak-v-nair/Backspace/blob/main/CONTRIBUTING.md)
 
-AI Agents (Claude Code, Cursor, Aider) are fast, but they are **non-deterministic**. A single hallucination can:
+[Website](https://backspace-three.vercel.app) · [Documentation](docs/) · [CLI Reference](docs/cli-reference.md) · [Contributing](CONTRIBUTING.md)
 
-1.  **Corrupt** your business logic with hundreds of lines of junk.
-2.  **Delete** critical configuration files during a "refactor."
-3.  **Drain** your API budget as the agent loops endlessly trying to "fix" its own mistakes.
+<br/>
 
-Standard `git checkout` is too coarse. It doesn't understand the *intent* of the AI's changes, and by the time you've committed, the damage is done across multiple files.
-
----
-
-## 🛠 The Solution: Backspace
-
-Backspace is a local daemon that provides a "Time Machine" for your codebase. It sits between your agent and your file system — watching every move, logging every diff in a **SQLite WAL** database, and offering a one-command snapback to safety.
-
-### ✨ Key Features
-
-| Feature | Description |
-|---|---|
-| **3-Path Revert Engine** | Handles file additions, deletions (via Git-Bridge ghost recovery), and modifications with surgical `diff.reversePatch` precision. |
-| **Zero-Overhead Watcher** | A 250ms-debounced, `.gitignore`-aware `chokidar` daemon that groups batched AI refactors into single atomic transactions. |
-| **Prompt Tagging** | Every session is tagged with your natural language description, making sessions instantly searchable. |
-| **Local Only** | All snapshot data stays on your machine in a local SQLite file. Nothing is sent to any server. No account required. |
-| **Token Efficiency** | Stop paying to debug an error the AI created. Hit `backspace-ai revert` and save the tokens. |
-| **Git Compatible** | Works alongside Git, doesn't replace it. Backspace captures the messy middle between commits. |
+</div>
 
 ---
 
-## ⌨️ Quick Start
+## The Problem
 
-### 1. Install
+AI coding agents (Claude Code, Cursor, Copilot, Aider) are powerful — but **non-deterministic**. A single hallucination can:
+
+- **Corrupt** your business logic across 23 files
+- **Delete** critical config files during a "refactor"
+- **Drain** your API budget looping on its own mistakes
+
+`git stash` is too coarse. `Ctrl+Z` doesn't work across files. By the time you notice, the damage is done.
+
+## The Solution
+
+Backspace is a local-first daemon that sits between your AI agent and your filesystem — watching every mutation, logging every diff, and offering instant rollback to safety.
+
+```
+Developer → AI Agent → Backspace → Filesystem
+                          ↓
+                    Observe · Record
+                    Verify · Revert
+```
+
+**Three commands. That's the entire workflow.**
+
+```bash
+# 1. Initialize (once per project)
+$ backspace-ai init
+✓ Backspace initialized · .backspace/local.db created
+
+# 2. Start watching (before AI session)
+$ backspace-ai watch
+✓ Daemon started (PID: 42891) · Watching for changes...
+
+  [snap] 4 files → "add auth module"
+  [snap] 12 files → "refactor db layer"
+  [snap] 23 files → "migrate API routes"     ← AI breaks things here
+
+# 3. Revert instantly
+$ backspace-ai revert
+✓ 23 files reverted in 47ms
+```
+
+---
+
+## Why Backspace?
+
+<table>
+<tr>
+<td width="50%">
+
+### What it does
+
+- ⚡ **Instant rollback** — Reverse an entire AI session atomically
+- 📸 **Session tracking** — Every file change captured in real-time
+- 🔒 **Local & encrypted** — AES-256-GCM, your code never leaves your machine
+- 🤖 **MCP integration** — Built-in Model Context Protocol server
+- 🔀 **Git compatible** — Works alongside Git at finer granularity
+- 🚀 **Zero config** — One command to start. No YAML, no accounts.
+
+</td>
+<td width="50%">
+
+### What makes it different
+
+| | Backspace | Git stash | Manual |
+|---|:---:|:---:|:---:|
+| Deterministic rollback | ✓ | ✗ | ✗ |
+| Session-level granularity | ✓ | ✗ | ✗ |
+| Encrypted snapshots | ✓ | ✗ | ✗ |
+| AI agent integration (MCP) | ✓ | ✗ | ✗ |
+| Zero configuration | ✓ | ✗ | ✗ |
+| Works offline | ✓ | ✓ | ✓ |
+
+</td>
+</tr>
+</table>
+
+---
+
+## Quick Start
+
+### Install
 
 ```bash
 npm install -g backspace-ai
 ```
 
-### 2. Protect Your Project
-
-Navigate to any repository you want to protect and initialize:
+### Protect Your Project
 
 ```bash
 cd your-project
@@ -61,65 +118,200 @@ backspace-ai init
 backspace-ai watch
 ```
 
-The daemon is now silently micro-snapshotting every file change into a local SQLite database.
+The daemon is now silently capturing every file change into a local encrypted SQLite database.
 
----
-
-## 🔁 Usage: The Revert
-
-When an AI hallucination destroys your code, simply run:
+### When Things Go Wrong
 
 ```bash
+# Interactive session picker
 backspace-ai revert
+
+# Or revert the latest session instantly
+backspace-ai revert --latest
+
+# Or revert a specific session
+backspace-ai revert --id abc123
 ```
 
-Backspace presents an interactive TUI with recent snapshots. Select the stable state, and your files are instantly restored using the **3-Path Inverse Patching** algorithm:
+---
+
+## How the Revert Engine Works
+
+Backspace uses a **3-Path Inverse Patching** algorithm:
 
 | Path | Scenario | Action |
-|---|---|---|
-| **Path 1** | AI *created* a new file | `fs.unlinkSync` — delete it |
-| **Path 2** | AI *deleted* a file | Reconstruct from stored full-text or Git-Bridge ghost recovery |
+|------|----------|--------|
+| **Path 1** | AI *created* a new file | `fs.unlinkSync` — removes the hallucinated file |
+| **Path 2** | AI *deleted* a file | Reconstructs from stored full-text snapshot |
 | **Path 3** | AI *modified* a file | `diff.reversePatch` — surgical line-level undo |
+
+All operations are **atomic** — either everything reverts or nothing does. No partial rollbacks.
 
 ---
 
-## 🏗️ Architecture
+## CLI Reference
 
-This project is a monorepo using npm workspaces:
+| Command | Description |
+|---------|-------------|
+| `backspace-ai init` | Initialize `.backspace/` directory and database |
+| `backspace-ai watch` | Start the background file watcher daemon |
+| `backspace-ai stop` | Stop the background daemon |
+| `backspace-ai status` | Show daemon status, DB size, active session |
+| `backspace-ai log` | List all recorded sessions with file counts |
+| `backspace-ai show <id>` | Pretty-print diffs for a session |
+| `backspace-ai revert` | Interactive session picker → instant restore |
+| `backspace-ai revert --latest` | Revert the most recent session |
+| `backspace-ai revert --id <id>` | Revert a specific session by ID |
+| `backspace-ai check <prompt>` | Pre-flight risk analysis for a prompt |
+| `backspace-ai mcp` | Start the MCP server for AI agent integration |
+| `backspace-ai integrate <tool>` | Auto-configure integration (e.g., `claude`) |
+| `backspace-ai telemetry` | Configure anonymous crash reporting |
 
-```text
-/
-├── apps/
-│   └── web/             # Next.js 16 Landing Page
-│                        #   React 19, Framer Motion, Tailwind
-├── packages/
-│   └── cli/             # Core Node.js daemon
-│                        #   SQLite WAL diff engine, chokidar watcher
-│                        #   Passive prompt sniffer (Aider/Cursor/Copilot)
-│                        #   3-Path revert engine with Git-Bridge
-└── supabase/            # Waitlist storage
+See the full [CLI Reference →](docs/cli-reference.md)
+
+---
+
+## AI Tool Integration
+
+Backspace works with **every** AI coding tool:
+
+<table>
+<tr>
+<td align="center" width="20%"><strong>Claude Code</strong><br/><code>backspace-ai integrate claude</code></td>
+<td align="center" width="20%"><strong>Cursor</strong><br/>Auto-detected</td>
+<td align="center" width="20%"><strong>Aider</strong><br/>Auto-detected</td>
+<td align="center" width="20%"><strong>Copilot</strong><br/>Auto-detected</td>
+<td align="center" width="20%"><strong>Any Agent</strong><br/>MCP Server</td>
+</tr>
+</table>
+
+### MCP Integration
+
+Backspace exposes a Model Context Protocol server that lets AI agents query session history, check file modification patterns, and even trigger safe rollbacks:
+
+```bash
+# Start the MCP server
+backspace-ai mcp
+
+# Or auto-configure for Claude Code
+backspace-ai integrate claude
 ```
 
 ---
 
-## 📜 CLI Reference
+## Architecture
 
-| Command | Description |
-|---|---|
-| `backspace-ai init` | Initialize `.backspace/` directory and SQLite database |
-| `backspace-ai watch` | Start the background file watcher daemon |
-| `backspace-ai stop` | Stop the background daemon |
-| `backspace-ai status` | Show current init state, daemon status, and DB size |
-| `backspace-ai log` | List all recorded snapshots |
-| `backspace-ai show <id>` | Pretty-print diffs for a specific snapshot |
-| `backspace-ai revert` | Interactive TUI to select and apply inverse patches |
-| `backspace-ai login` | Authenticate via browser OAuth |
-| `backspace-ai integrate claude` | Auto-configure `.mcp.json` for Claude Code |
-| `backspace-ai mcp` | Start the MCP server over stdio |
-| `backspace-ai telemetry [status\|enable\|disable]` | Manage anonymous crash reporting |
+```
+backspace/
+├── packages/
+│   └── cli/                    # Core Node.js daemon & CLI
+│       ├── src/
+│       │   ├── index.ts        # Commander entrypoint (binary: backspace-ai)
+│       │   ├── daemon.ts       # Chokidar watcher + diff pipeline
+│       │   ├── supervisor.ts   # Detached process manager
+│       │   ├── db.ts           # SQLite WAL storage layer
+│       │   ├── crypto.ts       # AES-256-GCM encryption pipeline
+│       │   ├── sniffer.ts      # AI prompt detection engine
+│       │   ├── analysis.ts     # Risk scoring & pattern analysis
+│       │   ├── mcp.ts          # Model Context Protocol server
+│       │   └── commands/       # CLI command handlers
+│       └── dist/               # Built output (tsup)
+├── apps/
+│   └── web/                    # Next.js marketing site
+├── packages/
+│   └── extension/              # VS Code extension (coming soon)
+└── docs/                       # Documentation
+```
+
+### Key Design Decisions
+
+- **Local-first**: SQLite WAL mode for concurrent writes during rapid AI mutations
+- **Encryption**: AES-256-GCM with per-project keys + Brotli compression
+- **Detached daemon**: Supervisor pattern — `watch` returns immediately, daemon lives in background
+- **Prompt sniffing**: Passive detection of AI tool prompts for session labeling
+
+See the full [Architecture Guide →](docs/architecture.md)
 
 ---
 
-## 📄 License
+## Token Savings Calculator
 
-MIT License © 2026 Vaishak V Nair
+When AI breaks code, you waste tokens re-prompting and debugging. Backspace eliminates that cost.
+
+```
+Formula:
+  tokens_saved = files_changed × 3,000 tokens/file × 3 debug iterations
+  cost_saved   = (tokens_saved / 1,000,000) × $3.00 (Claude Sonnet rate)
+  time_saved   = files_changed × 1.5 minutes
+
+Example (20 files):
+  tokens_saved = 180,000
+  cost_saved   = $0.54 per session
+  time_saved   = 30 minutes
+```
+
+Over a month of daily AI coding, Backspace can save **$15-50 in API costs** and **hours of debugging time**.
+
+---
+
+## Roadmap
+
+- [x] Core CLI (init, watch, stop, revert, log, show)
+- [x] AES-256-GCM encryption
+- [x] MCP server
+- [x] Prompt sniffing (Claude, Cursor, Aider)
+- [x] Pre-flight risk analysis (`check` command)
+- [ ] AI Flight Recorder — complete session forensics
+- [ ] Smart Rollback — automatic risk detection
+- [ ] Session Replay — step-by-step playback
+- [ ] AI Blame — line-level AI vs human attribution
+- [ ] VS Code Extension
+- [ ] Plugin ecosystem
+
+See the full [Product Roadmap →](docs/roadmap.md)
+
+---
+
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+**Good first issues** are labeled and waiting — everything from adding new AI tool sniffers to improving terminal output.
+
+```bash
+# Clone and setup
+git clone https://github.com/vaishak-v-nair/Backspace.git
+cd Backspace
+npm install
+
+# Build the CLI
+cd packages/cli
+npm run build
+
+# Run locally
+node dist/index.js init
+```
+
+---
+
+## Community
+
+- 🐛 [Report a bug](https://github.com/vaishak-v-nair/Backspace/issues/new?template=bug_report.yml)
+- 💡 [Request a feature](https://github.com/vaishak-v-nair/Backspace/issues/new?template=feature_request.yml)
+- 💬 [Discussions](https://github.com/vaishak-v-nair/Backspace/discussions)
+
+---
+
+## License
+
+MIT © [Vaishak V Nair](https://github.com/vaishak-v-nair)
+
+---
+
+<div align="center">
+
+**If Backspace saved your project, consider giving it a ⭐**
+
+*why debug when you can revert.*
+
+</div>

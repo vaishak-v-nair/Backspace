@@ -1,10 +1,18 @@
+/**
+ * POST /api/sync
+ *
+ * Receives client-side encrypted snapshot payloads for cloud backup.
+ * Authentication via Bearer token (stored during `backspace-ai login`).
+ * 
+ * All payloads MUST be encrypted client-side before upload.
+ * The server never sees plaintext diffs.
+ */
+
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
 const syncPayloadSchema = z.object({
-  projectId: z.string().uuid(),
   payloads: z.array(z.object({
     id: z.string().uuid(),
     timestamp: z.string().datetime().optional(),
@@ -16,8 +24,9 @@ const syncPayloadSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Validate Bearer token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -28,34 +37,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid payload structure', details: result.error.issues }, { status: 400 });
     }
 
-    const { projectId, payloads } = result.data;
+    const { payloads } = result.data;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json({ error: 'Internal server error: Supabase not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Sync not configured' }, { status: 503 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify project belongs to user
-    const { data: projectData, error: projectError } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('id', projectId)
-      .eq('user_id', userId)
-      .single();
-
-    if (projectError || !projectData) {
-      return NextResponse.json({ error: 'Project not found or unauthorized' }, { status: 403 });
-    }
-
-    // Insert the encrypted snapshots
     const insertData = payloads.map(p => ({
       id: p.id,
-      project_id: projectId,
-      user_id: userId,
       timestamp: p.timestamp || new Date().toISOString(),
       iv: p.iv,
       auth_tag: p.auth_tag,
@@ -67,12 +61,11 @@ export async function POST(req: Request) {
       .insert(insertData);
 
     if (insertError) {
-      console.error('Supabase Insert Error:', insertError);
-      return NextResponse.json({ error: 'Failed to insert encrypted snapshots' }, { status: 500 });
+      console.error('Sync insert error:', insertError);
+      return NextResponse.json({ error: 'Failed to sync snapshots' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, count: payloads.length }, { status: 200 });
-
+    return NextResponse.json({ success: true, count: payloads.length });
   } catch (error) {
     console.error('Sync API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

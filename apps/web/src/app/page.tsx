@@ -2,8 +2,8 @@
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import ProblemSection from "@/components/ProblemSection";
-import FeaturesGrid from "@/components/FeaturesGrid";
+import TrustSection from "@/components/TrustSection";
+import FeaturesSection from "@/components/FeaturesSection";
 import HowItWorks from "@/components/HowItWorks";
 import TokenCalculator from "@/components/TokenCalculator";
 import WaitlistSection from "@/components/WaitlistSection";
@@ -11,14 +11,14 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-[#050505] text-white">
-      {/* Subtle grid background */}
-      <div className="fixed inset-0 grid-bg opacity-50 pointer-events-none" />
+    <main className="relative min-h-screen w-full overflow-hidden" style={{ background: "#0a0806", color: "#f5f0e8" }}>
+      {/* Subtle dot grid */}
+      <div className="fixed inset-0 dot-grid pointer-events-none" />
 
       <Navbar />
       <HeroSection />
-      <ProblemSection />
-      <FeaturesGrid />
+      <TrustSection />
+      <FeaturesSection />
       <HowItWorks />
       <TokenCalculator />
       <WaitlistSection />

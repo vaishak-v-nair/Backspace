@@ -1,11 +1,22 @@
-import { execSync } from 'child_process';
+/**
+ * daemon.ts — Backspace background file watcher
+ *
+ * Runs as a detached child process, watching the project directory for
+ * filesystem mutations. When changes are detected, it captures unified
+ * diffs, compresses and encrypts them, and writes snapshot rows to the
+ * local SQLite database.
+ *
+ * Launched by the supervisor (supervisor.ts) via the __daemon-worker flag.
+ */
+
+import { execSync } from 'node:child_process';
 import chokidar from 'chokidar';
-import fs from 'fs';
-import path from 'path';
-import zlib from 'zlib';
+import fs from 'node:fs';
+import path from 'node:path';
+import zlib from 'node:zlib';
 import * as diff from 'diff';
-import crypto from 'crypto';
-import { LocalDB, SnapshotPayload, BACKSPACE_DIR, DB_FILENAME } from './db.js';
+import crypto from 'node:crypto';
+import { BackspaceDB, BACKSPACE_DIR, DB_FILENAME, type EventType } from './db.js';
 import { encryptData } from './crypto.js';
 import { createIgnoreFilter, type IgnoreFilter } from './ignore-engine.js';
 import { startSniffer, getLatestPrompt, type SnifferDisposable } from './sniffer.js';
@@ -17,33 +28,35 @@ interface FileChange {
 
 export class Daemon {
   private watcher: chokidar.FSWatcher | null = null;
-  private db: LocalDB;
+  private db: BackspaceDB;
   private pendingChanges: FileChange[] = [];
   private debounceTimer: NodeJS.Timeout | null = null;
   private cwd: string;
+  private sessionId: string | undefined;
   private fileCache: Map<string, string> = new Map(); // path -> file content for diffs
   private ignoreFilter: IgnoreFilter;
   private sniffer: SnifferDisposable | null = null;
 
-  constructor(cwd: string = process.cwd(), db: LocalDB) {
+  constructor(cwd: string, db: BackspaceDB, sessionId?: string) {
     this.cwd = cwd;
     this.db = db;
+    this.sessionId = sessionId;
     this.ignoreFilter = createIgnoreFilter(cwd);
   }
 
-  public static async start(options: { cwd: string }) {
-    const db = new LocalDB(path.join(options.cwd, BACKSPACE_DIR, DB_FILENAME));
-    const daemon = new Daemon(options.cwd, db);
+  public static async start(options: { cwd: string; sessionId?: string }): Promise<Daemon> {
+    const db = BackspaceDB.open(options.cwd);
+    const daemon = new Daemon(options.cwd, db, options.sessionId);
     await daemon.start();
     return daemon;
   }
 
-  public async start() {
+  public async start(): Promise<void> {
     // Start the AI prompt sniffer to capture prompt context from AI tools
     this.sniffer = startSniffer(this.cwd);
 
     this.watcher = chokidar.watch(this.cwd, {
-      ignored: (filePath: string, stats?: fs.Stats) => {
+      ignored: (filePath: string, _stats?: fs.Stats) => {
         const relPath = path.relative(this.cwd, filePath);
         if (!relPath) return false; // Don't ignore the root dir itself
         return this.ignoreFilter.shouldIgnore(relPath);
@@ -67,7 +80,7 @@ export class Daemon {
     console.log(`[Daemon] Watching ${this.cwd} for changes...`);
   }
 
-  private handleFileEvent(event: FileChange['event'], filePath: string) {
+  private handleFileEvent(event: FileChange['event'], filePath: string): void {
     const relPath = path.relative(this.cwd, filePath);
 
     // Use the production-grade ignore filter for binary/oversized/ignored files
@@ -92,15 +105,14 @@ export class Daemon {
     }, 250);
   }
 
-  private async processBatch() {
+  private processBatch(): void {
     if (this.pendingChanges.length === 0) return;
 
     const changesToProcess = [...this.pendingChanges];
     this.pendingChanges = []; // clear pending queue
 
-    const snapshots: SnapshotPayload[] = [];
     const filesChangedList: string[] = [];
-    const diffPayloads: any[] = [];
+    const diffPayloads: Array<{ path: string; event: string; patch: string }> = [];
 
     for (const change of changesToProcess) {
       // Only process files for content diffs (skip directories)
@@ -114,7 +126,7 @@ export class Daemon {
         diffPayloads.push({
           path: relPath,
           event: change.event,
-          patch: "BINARY_FILE_BYPASSED"
+          patch: 'BINARY_FILE_BYPASSED'
         });
         continue;
       }
@@ -124,7 +136,7 @@ export class Daemon {
         diffPayloads.push({
           path: relPath,
           event: change.event,
-          patch: "BINARY_FILE_BYPASSED"
+          patch: 'BINARY_FILE_BYPASSED'
         });
         continue;
       }
@@ -134,10 +146,11 @@ export class Daemon {
         try {
           // Attempt to read the new content gracefully
           currentContent = fs.readFileSync(change.path, 'utf8');
-        } catch (err: any) {
-          if (err.code === 'EACCES' || err.code === 'EPERM') {
+        } catch (err: unknown) {
+          const code = (err as NodeJS.ErrnoException).code;
+          if (code === 'EACCES' || code === 'EPERM') {
             console.error(`[Daemon] Permission denied reading file ${change.path}`);
-          } else if (err.code === 'ENOENT') {
+          } else if (code === 'ENOENT') {
             // File might have been deleted right after change event
             continue;
           } else {
@@ -159,12 +172,12 @@ export class Daemon {
             encoding: 'utf8',
             stdio: ['ignore', 'pipe', 'ignore']
           });
-        } catch (e) {
+        } catch {
           // Fallback if not tracked in Git
           previousContent = '';
         }
       } else {
-        previousContent = previousContent || '';
+        previousContent = previousContent ?? '';
       }
 
       // Update local memory cache
@@ -195,15 +208,68 @@ export class Daemon {
 
       // Pull prompt context from the AI tool sniffer instead of hardcoding
       const sniffedPrompt = getLatestPrompt();
-      const contextPrompt = sniffedPrompt ?? "System: Auto-captured batch change";
+      const contextPrompt = sniffedPrompt ?? 'System: Auto-captured batch change';
 
-      // CORRECT ORDER: Compress FIRST, then encrypt.
+      // ── Write per-file events (provenance chain) ──────────────────────────
+      if (this.sessionId) {
+        try {
+          for (const payload of diffPayloads) {
+            if (payload.patch === 'BINARY_FILE_BYPASSED') continue;
+
+            // Map chokidar event names to our EventType
+            let eventType: EventType;
+            if (payload.event === 'add' || payload.event === 'addDir') {
+              eventType = 'add';
+            } else if (payload.event === 'unlink' || payload.event === 'unlinkDir') {
+              eventType = 'unlink';
+            } else {
+              eventType = 'change';
+            }
+
+            // Compress the diff/patch data for storage
+            const patchBuffer = payload.patch
+              ? zlib.brotliCompressSync(Buffer.from(payload.patch, 'utf8'))
+              : null;
+
+            // Compute content hashes for integrity verification
+            const beforeHash = payload.event === 'add'
+              ? null
+              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 16);
+            const afterHash = payload.event === 'unlink'
+              ? null
+              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 16);
+
+            const sequence = this.db.getNextSequence(this.sessionId);
+
+            this.db.insertEvent({
+              id: crypto.randomUUID(),
+              session_id: this.sessionId,
+              file_path: payload.path,
+              event_type: eventType,
+              tool: null, // Will be populated from sniffer source in future
+              prompt: contextPrompt,
+              before_hash: beforeHash,
+              after_hash: afterHash,
+              diff_payload: patchBuffer,
+              captured_at: Date.now(),
+              sequence,
+            });
+
+            this.db.incrementSessionEventCount(this.sessionId);
+          }
+        } catch (err) {
+          console.error('[Daemon] Failed to write events to database:', err);
+        }
+      }
+
+      // ── Write legacy snapshot (backward compatibility) ─────────────────────
+      // Compress FIRST, then encrypt.
       // Encrypted data has maximum entropy — compressing after encryption is a no-op.
       const compressedPayload = zlib.brotliCompressSync(Buffer.from(rawDiffText, 'utf8'));
 
       // Encrypt the compressed payload locally before it ever commits to disk
       const secureBlock = encryptData(compressedPayload.toString('base64'), this.cwd);
-      
+
       const optimizedDbPayload = JSON.stringify({
         cipher_payload: secureBlock.encryptedPayload,
         crypto_iv: secureBlock.iv,
@@ -212,32 +278,37 @@ export class Daemon {
       });
 
       try {
-        // Persist directly into the crash-resilient SQLite system
-        // Note: saveCompressedSnapshot also applies brotli, but since our payload
-        // is already a JSON string (not raw diff), the double compression is minimal.
-        // We pass the encrypted JSON directly — the db method handles its own compression.
-        this.db.saveCompressedSnapshot(crypto.randomUUID(), optimizedDbPayload, JSON.stringify(filesChangedList), contextPrompt);
+        // Persist directly into the crash-resilient SQLite system.
+        // saveSnapshot applies brotli compression on the JSON envelope string.
+        this.db.saveSnapshot(
+          crypto.randomUUID(),
+          optimizedDbPayload,
+          JSON.stringify(filesChangedList),
+          contextPrompt,
+        );
       } catch (err) {
         console.error('[Daemon] Failed to write batch to database:', err);
       }
     }
   }
 
-  public async stop() {
+  public async stop(): Promise<void> {
     if (this.sniffer) {
       this.sniffer.close();
     }
     if (this.watcher) {
       await this.watcher.close();
     }
+    this.db.close();
   }
 }
 
-export async function startDaemon(options: { cwd: string }) {
+export async function startDaemon(options: { cwd: string; sessionId?: string }): Promise<Daemon> {
   return await Daemon.start(options);
 }
 
 // Internal worker hook if running directly
 if (process.argv[2] === '__daemon-run') {
-  startDaemon({ cwd: process.cwd() });
+  const sessionId = process.env.BACKSPACE_SESSION_ID;
+  startDaemon({ cwd: process.cwd(), sessionId: sessionId ?? undefined });
 }
