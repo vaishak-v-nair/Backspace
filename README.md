@@ -20,6 +20,9 @@
 
 <br/>
 
+<!-- TODO: Add a 15-second terminal GIF here showing an AI hallucination being reverted instantly -->
+![Backspace Demo Placeholder](https://via.placeholder.com/800x400.png?text=15-Second+Terminal+GIF+Demo+Here)
+
 </div>
 
 ---
@@ -75,26 +78,25 @@ $ backspace-ai revert
 
 ### What it does
 
-- ⚡ **Instant rollback** — Reverse an entire AI session atomically
-- 📸 **Session tracking** — Every file change captured in real-time
+- ⚡ **Instant rollback** — Reverse an entire AI session atomically in milliseconds
+- 📸 **Session tracking** — Minute-by-minute file changes captured automatically
 - 🔒 **Local & encrypted** — AES-256-GCM, your code never leaves your machine
-- 🤖 **MCP integration** — Built-in Model Context Protocol server
-- 🔀 **Git compatible** — Works alongside Git at finer granularity
-- 🚀 **Zero config** — One command to start. No YAML, no accounts.
+- 🤖 **MCP integration** — AI agents can query their own history and trigger rollbacks
+- 🔀 **Git compatible** — Works alongside Git at a much finer granularity
+- 🚀 **Zero config** — Literally one command to start. No YAML, no accounts, no setup.
 
 </td>
 <td width="50%">
 
-### What makes it different
+### How it compares
 
-| | Backspace | Git stash | Manual |
+| Feature | Backspace | Git stash | Manual |
 |---|:---:|:---:|:---:|
-| Deterministic rollback | ✓ | ✗ | ✗ |
-| Session-level granularity | ✓ | ✗ | ✗ |
-| Encrypted snapshots | ✓ | ✗ | ✗ |
-| AI agent integration (MCP) | ✓ | ✗ | ✗ |
-| Zero configuration | ✓ | ✗ | ✗ |
-| Works offline | ✓ | ✓ | ✓ |
+| **Deterministic rollback** | ✓ | ✗ | ✗ |
+| **Minute-by-minute tracking** | ✓ | ✗ | ✗ |
+| **Local-first encryption** | ✓ | ✗ | ✗ |
+| **Zero configuration** | ✓ | ✗ | ✗ |
+| **AI Agent integration (MCP)** | ✓ | ✗ | ✗ |
 
 </td>
 </tr>
@@ -185,15 +187,15 @@ Backspace works with **every** AI coding tool:
 </tr>
 </table>
 
-### MCP Integration
+### Built for the Model Context Protocol (MCP)
 
-Backspace exposes a Model Context Protocol server that lets AI agents query session history, check file modification patterns, and even trigger safe rollbacks:
+Backspace is natively designed for the MCP standard. It exposes a built-in server that lets AI agents query session history, check their own file modification patterns, and even trigger safe rollbacks when they get stuck in a failure loop.
 
 ```bash
-# Start the MCP server
+# Start the MCP server for any agent
 backspace-ai mcp
 
-# Or auto-configure for Claude Code
+# Or auto-configure it for Claude Code in one click
 backspace-ai integrate claude
 ```
 

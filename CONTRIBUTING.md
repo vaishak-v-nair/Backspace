@@ -98,6 +98,23 @@ Look for issues labeled [`good first issue`](https://github.com/vaishak-v-nair/B
 
 ---
 
+## Adding a New AI Sniffer
+
+Backspace tracks which AI tool made a change by parsing the process tree and environment variables (via `sniffer.ts`). If your favorite AI tool isn't being detected, here is how you can add it:
+
+1. **Locate the Sniffer Module**: Open `packages/cli/src/sniffer.ts`.
+2. **Find the Tool Signature**: Determine what makes the AI tool unique in a process tree. Does it spawn a specific node script? Does it set a unique environment variable?
+3. **Add the Detection Logic**: Add a new branch in the `detectAITool` function.
+   ```typescript
+   // Example for a hypothetical new tool 'CodeGenius'
+   if (processEnv.CODE_GENIUS_SESSION_ID || commandLine.includes('codegenius')) {
+     return { name: 'codegenius', confidence: 0.9 };
+   }
+   ```
+4. **Test It**: Run `backspace-ai watch` locally while using the new tool and verify that `backspace-ai status` correctly identifies it as the active tool.
+
+---
+
 ## Pull Request Process
 
 ### 1. Create a Branch
