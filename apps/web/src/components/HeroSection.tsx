@@ -28,7 +28,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-20">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-28 pb-16 sm:pb-20">
       {/* Subtle warm orb */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-[#8b5cf6]/[0.03] blur-[120px] pointer-events-none" />
 
@@ -37,22 +37,22 @@ export default function HeroSection() {
         <div ref={tagRef} className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#2a2520] bg-[#100e0b] px-4 py-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-[#34d399]" />
           <span className="text-[10px] tracking-[0.15em] uppercase text-[#8a7f72]">
-            Available now · Claude Code · Cursor · Copilot
+            Works with Claude Code · Cursor · Aider · Copilot
           </span>
         </div>
 
-        {/* Headline — serif italic for emphasis words (Caveman-style) */}
-        <h1 ref={h1Ref} className="text-[2.75rem] sm:text-5xl md:text-[3.75rem] font-semibold tracking-[-0.03em] leading-[1.1] text-[#f5f0e8]">
-          undo anything
+        {/* Headline */}
+        <h1 ref={h1Ref} className="text-[2.25rem] sm:text-5xl md:text-[3.75rem] font-semibold tracking-[-0.03em] leading-[1.1] text-[#f5f0e8]">
+          which <span className="serif-accent">AI action</span>
           <br />
-          your <span className="serif-accent">AI</span> just did.
+          broke your code?
         </h1>
 
         {/* Sub */}
-        <p ref={subRef} className="mt-6 text-[15px] text-[#8a7f72] leading-relaxed max-w-lg mx-auto">
-          Claude broke the build? Cursor hallucinated across 23 files?
+        <p ref={subRef} className="mt-6 text-[14px] sm:text-[15px] text-[#8a7f72] leading-relaxed max-w-lg mx-auto">
+          Git tracks commits. Backspace tracks AI actions.
           <br className="hidden sm:block" />
-          One command. Every file restored. Zero tokens wasted.
+          Understand, isolate, and recover from AI-generated changes.
         </p>
 
         {/* Actions */}
@@ -77,23 +77,20 @@ export default function HeroSection() {
             <div className="terminal-dot bg-[#ff5f57]" />
             <div className="terminal-dot bg-[#febc2e]" />
             <div className="terminal-dot bg-[#28c840]" />
-            <span className="terminal-title">backspace-ai · demo</span>
+            <span className="terminal-title">backspace-ai · session recovery</span>
           </div>
           <div className="terminal-body">
-            <div><span className="t-prompt">$</span> <span className="t-cmd">backspace-ai init</span></div>
-            <div className="t-ok">✓ Backspace initialized</div>
-            <div className="t-dim">  .backspace/local.db created · AES-256-GCM</div>
-            <div>&nbsp;</div>
             <div><span className="t-prompt">$</span> <span className="t-cmd">backspace-ai watch</span></div>
-            <div className="t-ok">✓ Daemon started (PID: 42891)</div>
-            <div className="t-dim">  Watching for changes...</div>
+            <div className="t-ok">✓ Daemon started · Watching for AI changes...</div>
             <div>&nbsp;</div>
-            <div className="t-dim">  <span className="t-cyan">[snap]</span> 4 files → &ldquo;add auth module&rdquo;</div>
-            <div className="t-dim">  <span className="t-cyan">[snap]</span> 12 files → &ldquo;refactor db layer&rdquo;</div>
-            <div className="t-dim">  <span className="t-cyan">[snap]</span> 23 files → &ldquo;migrate API routes&rdquo;</div>
+            <div className="t-dim">  <span className="t-cyan">[session]</span> &ldquo;Add JWT authentication&rdquo;</div>
+            <div className="t-dim">  <span className="t-cyan">[snap]</span> 12 files modified</div>
+            <div className="t-dim">  <span className="t-amber">⚠ auth/middleware.ts</span> — suspicious sync→async change</div>
             <div>&nbsp;</div>
-            <div><span className="t-prompt">$</span> <span className="t-cmd">backspace-ai revert</span></div>
-            <div className="t-ok">✓ 23 files reverted in 47ms</div>
+            <div><span className="t-prompt">$</span> <span className="t-cmd">backspace-ai revert --latest</span></div>
+            <div className="t-ok">✓ 12 files reverted in 31ms</div>
+            <div className="t-dim">⚠ AI modified API endpoint signatures</div>
+            <div className="t-dim">  Risk pattern: breakage rate 37%</div>
             <div><span className="t-cursor" /></div>
           </div>
         </div>

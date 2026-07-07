@@ -68,8 +68,8 @@ export default function HowItWorks() {
   }, []);
 
   return (
-    <section id="how-it-works" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
+    <section id="how-it-works" ref={ref} className="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-12 sm:mb-20 md:mb-24" />
       <div className="mx-auto max-w-[1200px]">
         <div ref={headRef} className="mb-12 sm:mb-20">
           <p className="section-tag mb-6">

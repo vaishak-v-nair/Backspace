@@ -6,11 +6,22 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const tableData = [
-  { feature: "AI-aware", git: "❌", bs: "✅" },
-  { feature: "Automatic snapshots", git: "❌", bs: "✅" },
-  { feature: "Rollback AI actions", git: "❌", bs: "✅" },
-  { feature: "Timeline of AI changes", git: "❌", bs: "✅" },
+const scenarios = [
+  {
+    question: "Which of 15 edits broke the tests?",
+    git: "Here are 15 diffs. Good luck.",
+    backspace: "Session 'refactor auth' touched 15 files. auth/middleware.ts has a sync→async change — 34% breakage rate.",
+  },
+  {
+    question: "Did the AI touch files I didn't ask about?",
+    git: "Check every commit manually.",
+    backspace: "⚠ Unrelated files modified: config/db.ts, .env.local",
+  },
+  {
+    question: "I switched from Cursor to Claude Code. Where's my history?",
+    git: "Different tools, different checkpoints.",
+    backspace: "One timeline. Every tool. Every change.",
+  },
 ];
 
 export default function WhyNotGit() {
@@ -29,47 +40,41 @@ export default function WhyNotGit() {
   }, []);
 
   return (
-    <section ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
+    <section ref={ref} className="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-12 sm:mb-20 md:mb-24" />
       <div className="mx-auto max-w-[1200px]" ref={contentRef}>
         <p className="section-tag mb-6">
-          <span className="num">§ 02</span> · Why Not Git?
+          <span className="num">§ 02</span> · Git vs Backspace
         </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
-          <div>
-            <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15] mb-6">
-              Git is for <span className="text-[#8a7f72]">humans.</span>
-              <br />
-              Backspace is for <span className="serif-accent">AI.</span>
-            </h2>
-            <p className="text-[14px] sm:text-[15px] text-[#8a7f72] leading-[1.7] mb-8">
-              This is the first objection every developer has. But when an AI agent rapidly mutates your codebase, `git stash` is too coarse, and `git log` lacks the context of the AI's intent. You need a system that tracks actions exactly as the AI performed them.
-            </p>
-          </div>
 
-          <div className="flex flex-col justify-center">
-            <div className="rounded-lg border border-[#2a2520] bg-[#100e0b] overflow-hidden">
-              <table className="w-full text-left text-[13px] sm:text-[14px]">
-                <thead>
-                  <tr className="border-b border-[#2a2520] bg-[#171310]">
-                    <th className="py-4 px-6 font-medium text-[#8a7f72]">Feature</th>
-                    <th className="py-4 px-6 font-medium text-[#8a7f72] text-center border-l border-[#2a2520]">Git</th>
-                    <th className="py-4 px-6 font-medium text-[#f5f0e8] text-center border-l border-[#2a2520]">Backspace</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.map((row, i) => (
-                    <tr key={row.feature} className={i !== tableData.length - 1 ? "border-b border-[#2a2520]" : ""}>
-                      <td className="py-4 px-6 text-[#c8bfb0]">{row.feature}</td>
-                      <td className="py-4 px-6 text-center border-l border-[#2a2520] text-[#8a7f72]">{row.git}</td>
-                      <td className="py-4 px-6 text-center border-l border-[#2a2520] text-[#34d399]">{row.bs}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <h2 className="text-3xl sm:text-[2.5rem] font-semibold tracking-[-0.025em] leading-[1.15] mb-4">
+          Git tracks <span className="text-[#8a7f72]">commits.</span>
+          <br />
+          Backspace tracks <span className="serif-accent">AI actions.</span>
+        </h2>
+        <p className="text-[14px] sm:text-[15px] text-[#8a7f72] leading-[1.7] mb-10 max-w-[600px]">
+          These are the three scenarios where <code className="text-[12px] text-[#c8bfb0] bg-[#171310] px-1.5 py-0.5 rounded">git checkout</code> fails
+          and Backspace answers the question instantly.
+        </p>
+
+        <div className="space-y-6">
+          {scenarios.map((s, i) => (
+            <div key={i} className="rounded-lg border border-[#2a2520] bg-[#100e0b] p-4 sm:p-6">
+              <p className="text-[13px] sm:text-[14px] font-medium text-[#f5f0e8] mb-4">
+                &ldquo;{s.question}&rdquo;
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-[12px] sm:text-[13px]">
+                <div className="rounded-md bg-[#0a0806] border border-[#2a2520] p-3 sm:p-4">
+                  <span className="text-[10px] font-mono text-[#5c5347] uppercase tracking-wider">Git</span>
+                  <p className="mt-2 text-[#8a7f72]">{s.git}</p>
+                </div>
+                <div className="rounded-md bg-[#0a0806] border border-[#8b5cf6]/20 p-3 sm:p-4">
+                  <span className="text-[10px] font-mono text-[#8b5cf6] uppercase tracking-wider">Backspace</span>
+                  <p className="mt-2 text-[#c8bfb0]">{s.backspace}</p>
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

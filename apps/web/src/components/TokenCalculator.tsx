@@ -42,8 +42,8 @@ export default function TokenCalculator() {
   const time = files * MINUTES_PER_FILE;
 
   return (
-    <section id="calculator" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
+    <section id="calculator" ref={ref} className="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-12 sm:mb-20 md:mb-24" />
       <div className="mx-auto max-w-[1200px]" ref={innerRef}>
         <p className="section-tag mb-6">
           <span className="num">§ 06</span> · Token Calculator

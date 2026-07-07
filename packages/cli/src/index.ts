@@ -15,8 +15,7 @@ import { logCommand } from './commands/log.js';
 import { showCommand } from './commands/show.js';
 import { revertCommand } from './commands/revert.js';
 import { checkCommand } from './commands/check.js';
-import { loginCommand } from './commands/login.js';
-import { joinCommand } from './commands/join.js';
+
 import { telemetryCommand } from './commands/telemetry.js';
 import { integrateCommand } from './commands/integrate.js';
 import { timelineCommand } from './commands/timeline.js';
@@ -47,16 +46,14 @@ const program = new Command();
 program
   .name('backspace-ai')
   .description('AI Provenance Engine — deterministic rollback for AI-assisted coding')
-  .version('0.2.0');
+  .version('0.1.0');
 
 // ── Core Commands ────────────────────────────────────────────────────────────
 
 program
   .command('init')
   .description('Initialize Backspace in the current repository')
-  .option('--local', 'SQLite only, nothing leaves your machine (default)', true)
-  .option('--sync', 'Enable client-side encrypted Supabase sync')
-  .action((opts) => initCommand(opts));
+  .action(() => initCommand({ local: true }));
 
 program
   .command('watch')
@@ -139,15 +136,7 @@ program
 
 // ── Extended Commands ────────────────────────────────────────────────────────
 
-program
-  .command('login')
-  .description('Authenticate the CLI with your Backspace account')
-  .action(loginCommand);
 
-program
-  .command('join')
-  .description('Join the beta waitlist')
-  .action(joinCommand);
 
 program
   .command('telemetry')

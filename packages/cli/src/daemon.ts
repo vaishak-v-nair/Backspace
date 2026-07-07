@@ -231,13 +231,13 @@ export class Daemon {
               ? zlib.brotliCompressSync(Buffer.from(payload.patch, 'utf8'))
               : null;
 
-            // Compute content hashes for integrity verification
+            // Compute content hashes for integrity verification (128-bit truncated SHA-256)
             const beforeHash = payload.event === 'add'
               ? null
-              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 16);
+              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 32);
             const afterHash = payload.event === 'unlink'
               ? null
-              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 16);
+              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 32);
 
             const sequence = this.db.getNextSequence(this.sessionId);
 

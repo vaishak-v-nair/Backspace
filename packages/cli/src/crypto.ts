@@ -24,12 +24,24 @@ export function getLocalEncryptionKey(cwd: string = process.cwd()): Buffer {
   // 1. Try reading from the dedicated crypto.key file (preferred)
   try {
     if (fs.existsSync(CRYPTO_KEY_PATH)) {
-      secretSeed = fs.readFileSync(CRYPTO_KEY_PATH, "utf8").trim();
-      if (secretSeed && secretSeed.length > 0) {
+      const rawContent = fs.readFileSync(CRYPTO_KEY_PATH, "utf8").trim();
+      if (rawContent.length > 0) {
+        secretSeed = rawContent;
         return crypto.createHash("sha256").update(secretSeed).digest();
       }
+      // File exists but is empty — this is a corruption scenario.
+      // Generating a new key would make existing encrypted snapshots unrecoverable.
+      throw new Error(
+        `Encryption key file exists but is empty: ${CRYPTO_KEY_PATH}\n` +
+        `This likely means the key was corrupted. Existing encrypted snapshots cannot be recovered without the original key.\n` +
+        `If this is a fresh project with no snapshots, delete the file and run 'backspace-ai init' again.`
+      );
     }
-  } catch {
+  } catch (err) {
+    // Re-throw our own corruption error, only swallow unexpected read errors
+    if (err instanceof Error && err.message.includes('Encryption key file exists but is empty')) {
+      throw err;
+    }
     // Fall through to migration/generation
   }
 

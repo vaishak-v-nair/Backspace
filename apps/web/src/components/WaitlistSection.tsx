@@ -40,11 +40,11 @@ export default function WaitlistSection() {
   };
 
   return (
-    <section id="updates" ref={ref} className="py-16 sm:py-28 md:py-36 px-4 sm:px-6">
-      <div className="divider mx-auto max-w-[1200px] mb-16 sm:mb-28" />
+    <section id="updates" ref={ref} className="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
+      <div className="divider mx-auto max-w-[1200px] mb-12 sm:mb-20 md:mb-24" />
       <div className="mx-auto max-w-[520px] text-center" ref={innerRef}>
         <p className="section-tag mb-6">
-          <span className="num">§ 08</span> · Stay Updated
+          <span className="num">§ 07</span> · Stay Updated
         </p>
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.02em] leading-[1.2] mb-3">
           Get notified on <span className="serif-accent">new releases.</span>

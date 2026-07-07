@@ -49,8 +49,8 @@ export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = p
     execArgs = ['tsx', cliEntryPointPath, "__daemon-worker"];
   }
 
-  // Open log stream for tracking child process crashes
-  const logStream = fs.openSync(logFile, "a");
+  // Open log stream for tracking child process crashes (0o600 = owner-only read/write)
+  const logStream = fs.openSync(logFile, "a", 0o600);
 
   // Spawn the child daemon process detached from the current terminal context.
   // On Windows, paths with spaces (e.g. C:\Program Files\nodejs\node.exe) break
@@ -82,8 +82,8 @@ export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = p
       });
 
   if (child.pid) {
-    // Write the verified PID immediately to disk
-    fs.writeFileSync(pidFile, child.pid.toString(), "utf8");
+    // Write the verified PID immediately to disk (0o600 = owner-only)
+    fs.writeFileSync(pidFile, child.pid.toString(), { encoding: "utf8", mode: 0o600 });
     console.log(`📡 Daemon successfully detached into background. (PID: ${child.pid})`);
   } else {
     console.error("❌ Failed to start the background daemon process.");

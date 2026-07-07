@@ -38,3 +38,12 @@ Thumbs.db
 
 .vercel
 .env*
+
+# Internal planning / AI agent files (must never be in public repo)
+CLAUDE.md
+AGENTS.md
+STRATEGY.md
+agents/
+.git-rewrite/
+.mcp.json
+launch-thread.md
