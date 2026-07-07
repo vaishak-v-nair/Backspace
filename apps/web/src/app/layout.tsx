@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { VercelToolbar } from "@vercel/toolbar/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,6 +34,8 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const shouldInjectToolbar = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview';
+
   return (
     <html lang="en" className="antialiased scroll-smooth" style={{ background: "#0a0806", color: "#f5f0e8" }}>
       <body className={`${inter.variable} ${jetbrainsMono.variable}`}>
@@ -40,6 +43,7 @@ export default function RootLayout({
         <div className="grain" aria-hidden="true" />
         {children}
         <Analytics />
+        {shouldInjectToolbar && <VercelToolbar />}
       </body>
     </html>
   );

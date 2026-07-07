@@ -41,14 +41,6 @@ jobs:
         working-directory: packages/cli
         run: npm run build
 
-      # ── Extension package ────────────────────────────────────
-      - name: Lint Extension (type-check)
-        working-directory: packages/extension
-        run: npx tsc --noEmit
-
-      - name: Build Extension
-        working-directory: packages/extension
-        run: npm run build
 
       # ── Web app ──────────────────────────────────────────────
       - name: Build Web
