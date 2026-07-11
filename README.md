@@ -69,6 +69,16 @@ A commit is "what changed." A session is "what the AI was trying to do and every
 
 ---
 
+## What Backspace Is NOT
+
+Backspace is not version control. It is not source control. It is not project memory, team knowledge management, or an AI assistant.
+
+If a feature focuses on remembering context across sessions, it does not belong in Backspace.
+
+Backspace answers one question: **which AI action caused the problem?**
+
+---
+
 ## Quick Start
 
 ```bash
@@ -189,17 +199,21 @@ Suggested constraints to add to your prompt:
 
 ## Roadmap
 
+### Shipped
 - [x] Core CLI (init, watch, stop, revert, log, show)
+- [x] AI Session Grouping — changes grouped by intent, labeled by prompt
 - [x] AES-256-GCM local encryption
 - [x] AI prompt sniffing (Claude, Cursor, Aider)
 - [x] Pre-flight risk analysis (`check` command)
 - [x] Post-revert pattern analysis
 - [x] MCP server for AI agent integration
 - [x] Event timeline and inspection
-- [ ] Selective revert (`--file`, `--hunk`)
+
+### High Priority (next)
+- [ ] Selective revert (`--file`, `--hunk`) — surgical rollback
 - [ ] Suspicious change warnings during `watch`
-- [ ] Session comparison (`diff <a> <b>`)
-- [ ] VS Code Extension
+- [ ] Session comparison (`diff <a> <b>`) — regression isolation
+- [ ] Risk scoring improvements — blast radius analysis
 
 ---
 
