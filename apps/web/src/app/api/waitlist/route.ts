@@ -43,9 +43,17 @@ export async function POST(req: Request) {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      // Dev fallback: log warning and return success so the form doesn't break
-      console.warn("[/api/waitlist] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set. Email not persisted.");
-      return NextResponse.json({ success: true, message: "You're on the list." });
+      console.error("[/api/waitlist] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set. Email not persisted.");
+      if (process.env.NODE_ENV === "production") {
+        // Never fake success in production — a misconfigured env would
+        // silently drop every signup while telling users they're on the list.
+        return NextResponse.json(
+          { error: "The waitlist is temporarily unavailable. Please try again later." },
+          { status: 503 }
+        );
+      }
+      // Dev fallback: return success so the form can be tested without Supabase
+      return NextResponse.json({ success: true, message: "You're on the list. (dev mode — not persisted)" });
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

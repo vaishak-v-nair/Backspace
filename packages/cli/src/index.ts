@@ -6,6 +6,7 @@
  */
 
 import { Command } from 'commander';
+import crypto from 'node:crypto';
 import { initTelemetry, captureException } from './telemetry.js';
 import { initCommand } from './commands/init.js';
 import { stopCommand } from './commands/stop.js';
@@ -21,7 +22,7 @@ import { integrateCommand } from './commands/integrate.js';
 import { timelineCommand } from './commands/timeline.js';
 import { inspectCommand } from './commands/inspect.js';
 import { mcpCommand } from './mcp.js';
-import { startSupervisedDaemon } from './supervisor.js';
+import { startSupervisedDaemon, isDaemonRunning } from './supervisor.js';
 import { BackspaceDB, isInitialized } from './db.js';
 import chalk from 'chalk';
 
@@ -68,6 +69,14 @@ program
         chalk.dim('Run `backspace-ai init` first.'),
       );
       process.exit(1);
+    }
+
+    // Check BEFORE creating a session — otherwise every repeat `watch` leaves
+    // a stray 'active' session with zero events in the database.
+    if (isDaemonRunning(cwd)) {
+      console.log(chalk.yellow('⚠ Backspace daemon is already running.'));
+      console.log(chalk.dim('Run `backspace-ai stop` first to start a new session.'));
+      return;
     }
 
     // Create a session in the database before launching the daemon
@@ -154,6 +163,14 @@ program
   .action(mcpCommand);
 
 // ── Parse (wrapped to capture unhandled errors) ──────────────────────────────
+
+// Async command handlers (e.g. revert) reject outside the try/catch below —
+// catch those at the process level so they're logged instead of silent.
+process.on('unhandledRejection', (err) => {
+  captureException(err);
+  console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+  process.exit(1);
+});
 
 try {
   program.parse(process.argv);

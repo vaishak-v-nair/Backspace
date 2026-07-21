@@ -13,9 +13,9 @@
 // ─── Risk level thresholds ────────────────────────────────────────────────────
 //
 // Final risk score = sum of matched pattern weights.
-//   HIGH:   score >= 6
-//   MEDIUM: score >= 3
-//   LOW:    score < 3
+//   HIGH:   score >= 4
+//   MEDIUM: score >= 2
+//   LOW:    score < 2
 
 export const RISK_THRESHOLDS = {
   HIGH: 4,     // A single high-weight pattern (auth, db, security) is enough

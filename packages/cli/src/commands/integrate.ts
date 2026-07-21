@@ -35,7 +35,7 @@ export function integrateCommand(tool: string): void {
 
   config.mcpServers['backspace'] = {
     command: 'npx',
-    args: ['-y', '@backspace/cli', 'mcp'],
+    args: ['-y', 'backspace-ai', 'mcp'],
   };
 
   try {
@@ -51,7 +51,7 @@ export function integrateCommand(tool: string): void {
     console.log(chalk.cyan('Next steps:'));
     console.log(`  1. Run ${chalk.bold('claude')} in this directory.`);
     console.log(`  2. When prompted, approve the new MCP server by running ${chalk.bold('/mcp')} and trusting it.`);
-    console.log(`  3. Claude will automatically use the ${chalk.italic('list_snapshots')} and ${chalk.italic('get_snapshot_diff')} tools.`);
+    console.log(`  3. Claude will automatically use the ${chalk.italic('list_sessions')} and ${chalk.italic('get_session_events')} tools.`);
   } catch (err: any) {
     console.error(chalk.red(`Failed to write to ${mcpConfigPath}: ${err.message}`));
     process.exit(1);

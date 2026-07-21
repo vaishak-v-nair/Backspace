@@ -19,7 +19,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 
 import { BackspaceDB, isInitialized } from './db.js';
-import { decryptData } from './crypto.js';
+import { decryptData, decryptEventPayload } from './crypto.js';
 import zlib from 'node:zlib';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,17 +35,6 @@ interface EncryptedEnvelope {
   crypto_iv: string;
   crypto_tag: string;
   compressed?: boolean;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function decompressPayload(payload: Buffer | null): string {
-  if (!payload) return '';
-  try {
-    return zlib.brotliDecompressSync(payload).toString('utf8');
-  } catch {
-    return payload.toString('utf8');
-  }
 }
 
 // ─── Server setup ─────────────────────────────────────────────────────────────
@@ -131,7 +120,7 @@ server.tool(
       }
 
       const sections = events.map((e) => {
-        const patch = decompressPayload(e.diff_payload);
+        const patch = decryptEventPayload(e.diff_payload, cwd);
         const time = new Date(e.captured_at).toLocaleString();
 
         if (e.event_type === 'unlink') {
@@ -159,7 +148,7 @@ server.tool(
 
 server.tool(
   'revert_session',
-  'Revert all file changes from a specific session. This undoes all AI modifications atomically. Use with caution.',
+  'Get the exact CLI command to revert a session. NOTE: this tool does NOT execute the revert itself — it returns the `backspace-ai revert` command that must be run in the terminal (the CLI stops the watcher daemon safely before reverting).',
   {
     session_id: z.string().describe('The session UUID to revert. Get IDs from list_sessions.'),
   },
@@ -169,11 +158,13 @@ server.tool(
       return { content: [{ type: 'text' as const, text: 'Backspace is not initialized. Run `backspace-ai init` first.' }] };
     }
 
-    // Delegate to the CLI command
+    // Delegate to the CLI command — the MCP server must not run the revert
+    // in-process (stdout is the MCP transport, and the daemon must be
+    // stopped first so the revert's writes aren't captured as new events).
     return {
       content: [{
         type: 'text' as const,
-        text: `To revert session \`${session_id}\`, run:\n\`\`\`\nbackspace-ai revert --id ${session_id}\n\`\`\`\nThis will reverse all file changes in the session.`,
+        text: `Nothing has been reverted yet. To revert session \`${session_id}\`, run these commands in the terminal:\n\`\`\`\nbackspace-ai stop\nbackspace-ai revert --id ${session_id}\n\`\`\`\nThe first command stops the watcher daemon (so the revert is not recorded as new events); the second reverses all file changes in the session.`,
       }],
     };
   },
@@ -181,7 +172,6 @@ server.tool(
 
 // ─── Tool: list_snapshots (backward compat) ──────────────────────────────────
 
-// @ts-expect-error Type instantiation is excessively deep
 server.tool(
   'list_snapshots',
   'List legacy Backspace snapshots. For newer sessions with individual events, use list_sessions instead.',

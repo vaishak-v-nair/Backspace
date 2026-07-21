@@ -6,18 +6,8 @@
  */
 
 import chalk from 'chalk';
-import zlib from 'node:zlib';
 import { BackspaceDB, isInitialized } from '../db.js';
-
-/** Decompresses a brotli-compressed event payload. */
-function decompressPayload(payload: Buffer | null): string {
-  if (!payload) return '';
-  try {
-    return zlib.brotliDecompressSync(payload).toString('utf8');
-  } catch {
-    return payload.toString('utf8');
-  }
-}
+import { decryptEventPayload } from '../crypto.js';
 
 export function inspectCommand(eventId: string): void {
   const cwd = process.cwd();
@@ -98,7 +88,7 @@ export function inspectCommand(eventId: string): void {
     console.log(chalk.dim('\n  ' + '─'.repeat(60)));
     console.log(chalk.bold('  Diff:\n'));
 
-    const patch = decompressPayload(event.diff_payload);
+    const patch = decryptEventPayload(event.diff_payload, cwd);
     if (!patch) {
       console.log(chalk.dim('  (no diff data)'));
     } else {

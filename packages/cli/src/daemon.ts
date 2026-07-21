@@ -17,7 +17,7 @@ import zlib from 'node:zlib';
 import * as diff from 'diff';
 import crypto from 'node:crypto';
 import { BackspaceDB, BACKSPACE_DIR, DB_FILENAME, type EventType } from './db.js';
-import { encryptData } from './crypto.js';
+import { encryptData, encryptEventPayload } from './crypto.js';
 import { createIgnoreFilter, type IgnoreFilter } from './ignore-engine.js';
 import { startSniffer, getLatestPrompt, type SnifferDisposable } from './sniffer.js';
 
@@ -112,7 +112,13 @@ export class Daemon {
     this.pendingChanges = []; // clear pending queue
 
     const filesChangedList: string[] = [];
-    const diffPayloads: Array<{ path: string; event: string; patch: string }> = [];
+    const diffPayloads: Array<{
+      path: string;
+      event: string;
+      patch: string;
+      beforeHash: string | null;
+      afterHash: string | null;
+    }> = [];
 
     for (const change of changesToProcess) {
       // Only process files for content diffs (skip directories)
@@ -126,7 +132,9 @@ export class Daemon {
         diffPayloads.push({
           path: relPath,
           event: change.event,
-          patch: 'BINARY_FILE_BYPASSED'
+          patch: 'BINARY_FILE_BYPASSED',
+          beforeHash: null,
+          afterHash: null
         });
         continue;
       }
@@ -136,7 +144,9 @@ export class Daemon {
         diffPayloads.push({
           path: relPath,
           event: change.event,
-          patch: 'BINARY_FILE_BYPASSED'
+          patch: 'BINARY_FILE_BYPASSED',
+          beforeHash: null,
+          afterHash: null
         });
         continue;
       }
@@ -162,9 +172,11 @@ export class Daemon {
 
       let previousContent = this.fileCache.get(change.path);
 
-      if (change.event === 'unlink' && previousContent === undefined) {
-        // The Git Bridge: If chokidar fired unlink before we cached the file,
-        // we extract the ghost file directly from Git history.
+      if (previousContent === undefined && change.event !== 'add') {
+        // The Git Bridge: first time we see this file (change), or chokidar
+        // fired unlink before we cached it — recover the baseline from Git
+        // history. Without this, the patch baseline would be '' and a later
+        // revert would truncate the file to empty instead of restoring it.
         try {
           const gitPath = relPath.replace(/\\/g, '/'); // Git uses forward slashes
           previousContent = execSync(`git show HEAD:"${gitPath}"`, {
@@ -173,11 +185,9 @@ export class Daemon {
             stdio: ['ignore', 'pipe', 'ignore']
           });
         } catch {
-          // Fallback if not tracked in Git
-          previousContent = '';
+          // Not tracked in Git — baseline is unrecoverable
+          previousContent = undefined;
         }
-      } else {
-        previousContent = previousContent ?? '';
       }
 
       // Update local memory cache
@@ -189,17 +199,36 @@ export class Daemon {
 
       // Generate payload based on the 3 paths of patching
       let patchData = '';
-      if (change.event === 'unlink') {
+      let beforeHash: string | null = null;
+      let afterHash: string | null = null;
+
+      if (change.event !== 'add' && previousContent === undefined) {
+        // Baseline unknown (untracked file never cached): a patch against ''
+        // would make revert wipe the file. Record the event as unrevertable
+        // instead of fabricating a destructive baseline.
+        patchData = 'BASELINE_UNKNOWN';
+        afterHash = change.event === 'unlink'
+          ? null
+          : crypto.createHash('sha256').update(currentContent).digest('hex').slice(0, 32);
+      } else if (change.event === 'unlink') {
         // Provide the entire original text for reconstruction
-        patchData = previousContent;
+        patchData = previousContent as string;
+        beforeHash = crypto.createHash('sha256').update(patchData).digest('hex').slice(0, 32);
       } else {
-        patchData = diff.createPatch(relPath, previousContent, currentContent, 'Old', 'New');
+        const baseline = change.event === 'add' ? '' : (previousContent as string);
+        patchData = diff.createPatch(relPath, baseline, currentContent, 'Old', 'New');
+        beforeHash = change.event === 'add'
+          ? null
+          : crypto.createHash('sha256').update(baseline).digest('hex').slice(0, 32);
+        afterHash = crypto.createHash('sha256').update(currentContent).digest('hex').slice(0, 32);
       }
 
       diffPayloads.push({
         path: relPath,
         event: change.event,
-        patch: patchData
+        patch: patchData,
+        beforeHash,
+        afterHash
       });
     }
 
@@ -226,18 +255,10 @@ export class Daemon {
               eventType = 'change';
             }
 
-            // Compress the diff/patch data for storage
+            // Compress + encrypt the diff/patch data for storage
             const patchBuffer = payload.patch
-              ? zlib.brotliCompressSync(Buffer.from(payload.patch, 'utf8'))
+              ? encryptEventPayload(payload.patch, this.cwd)
               : null;
-
-            // Compute content hashes for integrity verification (128-bit truncated SHA-256)
-            const beforeHash = payload.event === 'add'
-              ? null
-              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 32);
-            const afterHash = payload.event === 'unlink'
-              ? null
-              : crypto.createHash('sha256').update(payload.patch).digest('hex').slice(0, 32);
 
             const sequence = this.db.getNextSequence(this.sessionId);
 
@@ -248,8 +269,8 @@ export class Daemon {
               event_type: eventType,
               tool: null, // Will be populated from sniffer source in future
               prompt: contextPrompt,
-              before_hash: beforeHash,
-              after_hash: afterHash,
+              before_hash: payload.beforeHash,
+              after_hash: payload.afterHash,
               diff_payload: patchBuffer,
               captured_at: Date.now(),
               sequence,
@@ -305,10 +326,4 @@ export class Daemon {
 
 export async function startDaemon(options: { cwd: string; sessionId?: string }): Promise<Daemon> {
   return await Daemon.start(options);
-}
-
-// Internal worker hook if running directly
-if (process.argv[2] === '__daemon-run') {
-  const sessionId = process.env.BACKSPACE_SESSION_ID;
-  startDaemon({ cwd: process.cwd(), sessionId: sessionId ?? undefined });
 }

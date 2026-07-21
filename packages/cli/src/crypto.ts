@@ -2,6 +2,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import zlib from "zlib";
 import { getBackspaceDir } from "./db.js";
 
 const ALGORITHM = "aes-256-gcm";
@@ -119,7 +120,7 @@ export function decryptData(encryptedPayload: string, ivHex: string, tagHex: str
   const key = getLocalEncryptionKey(cwd);
   const iv = Buffer.from(ivHex, "hex");
   const tag = Buffer.from(tagHex, "hex");
-  
+
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
 
@@ -127,4 +128,63 @@ export function decryptData(encryptedPayload: string, ivHex: string, tagHex: str
   decrypted += decipher.final("utf8");
 
   return decrypted;
+}
+
+/**
+ * Encrypts an event patch for storage in the events table.
+ *
+ * Pipeline: brotli compress → AES-256-GCM encrypt → JSON envelope Buffer.
+ * Same envelope shape as legacy snapshots so readers share one decoder.
+ */
+export function encryptEventPayload(patch: string, cwd: string = process.cwd()): Buffer {
+  const compressed = zlib.brotliCompressSync(Buffer.from(patch, "utf8"));
+  const block = encryptData(compressed.toString("base64"), cwd);
+  return Buffer.from(
+    JSON.stringify({
+      cipher_payload: block.encryptedPayload,
+      crypto_iv: block.iv,
+      crypto_tag: block.tag,
+      compressed: true,
+    }),
+    "utf8",
+  );
+}
+
+/**
+ * Decodes an event's diff_payload Buffer into the original patch text.
+ *
+ * Handles all three historical formats:
+ *   1. Encrypted JSON envelope (current) — decrypt → base64 → brotli
+ *   2. Brotli-compressed raw patch (legacy events)
+ *   3. Uncompressed raw patch (oldest legacy data)
+ */
+export function decryptEventPayload(payload: Buffer | null, cwd: string = process.cwd()): string {
+  if (!payload) return "";
+
+  const text = payload.toString("utf8");
+  if (text.startsWith("{")) {
+    try {
+      const envelope = JSON.parse(text) as {
+        cipher_payload?: string;
+        crypto_iv?: string;
+        crypto_tag?: string;
+        compressed?: boolean;
+      };
+      if (envelope.cipher_payload && envelope.crypto_iv && envelope.crypto_tag) {
+        let decrypted = decryptData(envelope.cipher_payload, envelope.crypto_iv, envelope.crypto_tag, cwd);
+        if (envelope.compressed) {
+          decrypted = zlib.brotliDecompressSync(Buffer.from(decrypted, "base64")).toString("utf8");
+        }
+        return decrypted;
+      }
+    } catch {
+      // Not an envelope (or key mismatch) — fall through to legacy paths
+    }
+  }
+
+  try {
+    return zlib.brotliDecompressSync(payload).toString("utf8");
+  } catch {
+    return text;
+  }
 }

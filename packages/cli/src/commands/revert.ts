@@ -22,8 +22,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import chalk from 'chalk';
-import { BackspaceDB, isInitialized, type EventRow } from '../db.js';
-import { decryptData } from '../crypto.js';
+import { BackspaceDB, isInitialized } from '../db.js';
+import { decryptData, decryptEventPayload } from '../crypto.js';
+import { isDaemonRunning } from '../supervisor.js';
 import { printRevertAnalysis } from '../analysis.js';
 
 interface DiffPayload {
@@ -53,16 +54,6 @@ function decryptEnvelope(
   }
 
   return JSON.parse(decryptedBase64) as DiffPayload[];
-}
-
-/** Decompresses an event's brotli-compressed diff payload. */
-function decompressEventPayload(payload: Buffer | null): string {
-  if (!payload) return '';
-  try {
-    return zlib.brotliDecompressSync(payload).toString('utf8');
-  } catch {
-    return payload.toString('utf8');
-  }
 }
 
 // ── Session-based revert ────────────────────────────────────────────────────
@@ -101,12 +92,15 @@ async function revertSession(
   const startTime = Date.now();
   let successCount = 0;
   let failureCount = 0;
+  let skippedCount = 0;
   const diffPayloads: DiffPayload[] = [];
 
-  // Process events in reverse sequence order (latest first)
+  // Process events in reverse sequence order (latest first).
+  // Failure policy: ANY failure (missing file, hunk rejection, I/O error)
+  // aborts the loop immediately — no partial rollback beyond that point.
   for (const event of events) {
     const absolutePath = path.resolve(cwd, event.file_path);
-    const patchText = decompressEventPayload(event.diff_payload);
+    const patchText = decryptEventPayload(event.diff_payload, cwd);
 
     // Build DiffPayload for analysis at the end
     diffPayloads.push({
@@ -114,6 +108,14 @@ async function revertSession(
       event: event.event_type,
       patch: patchText,
     });
+
+    if (patchText === 'BASELINE_UNKNOWN') {
+      // The file was untracked and never cached when this event fired — the
+      // original content was never captured, so there is nothing to restore.
+      console.log(chalk.yellow(`  ⊘ Skipped ${event.file_path} — original content unknown (file was untracked when first seen)`));
+      skippedCount++;
+      continue;
+    }
 
     try {
       if (event.event_type === 'add') {
@@ -137,13 +139,16 @@ async function revertSession(
         if (!fs.existsSync(absolutePath)) {
           console.error(chalk.red(`  ❌ Cannot revert ${event.file_path} — file was deleted manually`));
           failureCount++;
-          continue;
+          break;
         }
 
         const currentDiskContent = fs.readFileSync(absolutePath, 'utf8');
-        const parsedPatches = diff.parsePatch(patchText);
-        const reversedPatches = diff.reversePatch(parsedPatches);
-        const revertedContent = diff.applyPatch(currentDiskContent, reversedPatches as diff.ParsedDiff[]);
+        // Each event stores exactly one single-file patch, so parsePatch
+        // yields one entry — applyPatch only accepts a single patch.
+        const reversedPatch = diff.reversePatch(diff.parsePatch(patchText))[0];
+        const revertedContent = reversedPatch !== undefined
+          ? diff.applyPatch(currentDiskContent, reversedPatch)
+          : false;
 
         if (typeof revertedContent === 'string') {
           fs.writeFileSync(absolutePath, revertedContent, 'utf8');
@@ -152,20 +157,27 @@ async function revertSession(
         } else {
           console.error(chalk.red(`  ❌ Hunk rejection on ${event.file_path} — file was modified after capture`));
           failureCount++;
+          break;
         }
       }
     } catch (err) {
       console.error(chalk.red(`  ❌ Failed to revert ${event.file_path}:`), err instanceof Error ? err.message : err);
       failureCount++;
-      // Stop on first failure — do NOT continue partial rollback
-      console.error(chalk.red('\nRevert aborted — partial rollback detected. Manual intervention required.'));
-      return;
+      break;
     }
   }
 
-  // Mark session as reverted
-  if (failureCount === 0) {
+  if (failureCount > 0) {
+    console.error(chalk.red(
+      `\nRevert aborted after ${successCount} file${successCount !== 1 ? 's' : ''} — ` +
+      'partial rollback. The session is NOT marked as reverted. Manual intervention may be required.',
+    ));
+  } else {
+    // Mark session as reverted
     db.revertSession(session.id);
+    if (skippedCount > 0) {
+      console.log(chalk.yellow(`\n⚠ ${skippedCount} event${skippedCount !== 1 ? 's' : ''} skipped (no captured baseline).`));
+    }
   }
 
   // ── Post-revert output ──────────────────────────────────────────────────
@@ -252,6 +264,10 @@ async function revertLegacySnapshot(
 
     if (payload.event === 'unlink' || payload.event === 'unlinkDir') {
       if (payload.patch === 'BINARY_FILE_BYPASSED') continue;
+      if (payload.patch === 'BASELINE_UNKNOWN') {
+        console.log(chalk.yellow(`  ⊘ Skipped ${payload.path} — original content unknown`));
+        continue;
+      }
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
       fs.writeFileSync(absolutePath, payload.patch, 'utf8');
       console.log(chalk.green(`  📝 Recreated deleted file ${payload.path}`));
@@ -262,10 +278,15 @@ async function revertLegacySnapshot(
     // change event
     if (fileExists) {
       if (payload.patch === 'BINARY_FILE_BYPASSED') continue;
+      if (payload.patch === 'BASELINE_UNKNOWN') {
+        console.log(chalk.yellow(`  ⊘ Skipped ${payload.path} — original content unknown`));
+        continue;
+      }
       const currentDiskContent = fs.readFileSync(absolutePath, 'utf8');
-      const parsedPatches = diff.parsePatch(payload.patch);
-      const reversedPatches = diff.reversePatch(parsedPatches);
-      const revertedContent = diff.applyPatch(currentDiskContent, reversedPatches as diff.ParsedDiff[]);
+      const reversedPatch = diff.reversePatch(diff.parsePatch(payload.patch))[0];
+      const revertedContent = reversedPatch !== undefined
+        ? diff.applyPatch(currentDiskContent, reversedPatch)
+        : false;
 
       if (typeof revertedContent === 'string') {
         fs.writeFileSync(absolutePath, revertedContent, 'utf8');
@@ -308,6 +329,17 @@ export async function revertCommand(
     process.exit(1);
   }
 
+  // Refuse to revert while the daemon is watching — it would capture the
+  // revert's own writes as new events inside the very session being reverted.
+  if (isDaemonRunning(cwd)) {
+    console.error(
+      chalk.red('The Backspace daemon is still running.\n') +
+      chalk.dim('Reverting now would record the revert itself as new session events.\n') +
+      chalk.dim('Run `backspace-ai stop` first, then revert.'),
+    );
+    process.exit(1);
+  }
+
   const db = BackspaceDB.open(cwd);
 
   try {
@@ -330,16 +362,16 @@ export async function revertCommand(
       return;
     }
 
-    // --id: match by ID prefix
+    // --id: match by exact ID or prefix across the FULL history
+    // (not just the 10 most recent shown in the interactive picker)
     if (options.id) {
-      // Try sessions first, then snapshots
-      const sessionMatch = sessions.find((s) => s.id.startsWith(options.id!));
+      const sessionMatch = db.findSession(options.id);
       if (sessionMatch) {
         await revertSession(db, sessionMatch.id, cwd, options);
         return;
       }
 
-      const snapshotMatch = snapshots.find((s) => s.id.startsWith(options.id!));
+      const snapshotMatch = db.findSnapshot(options.id);
       if (snapshotMatch) {
         await revertLegacySnapshot(db, snapshotMatch.id, cwd, options);
         return;

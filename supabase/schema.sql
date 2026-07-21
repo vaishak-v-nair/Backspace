@@ -43,7 +43,19 @@ USING (requesting_user_id() = user_id);
 
 -- 4. Helper function to extract Clerk ID from the JWT
 -- Clerk sends a custom JWT. We extract the 'sub' (subject) claim which is the user ID.
-CREATE OR REPLACE FUNCTION requesting_user_id() 
+CREATE OR REPLACE FUNCTION requesting_user_id()
 RETURNS TEXT AS $$
   SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '');
 $$ LANGUAGE SQL STABLE;
+
+-- 5. Waitlist table (used by the landing page /api/waitlist route)
+CREATE TABLE IF NOT EXISTS waitlist (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL UNIQUE,
+    source TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- RLS on with no public policies: only the service-role key (used
+-- server-side by the API route) can read or write waitlist rows.
+ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;

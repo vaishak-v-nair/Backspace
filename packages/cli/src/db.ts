@@ -237,6 +237,15 @@ export class BackspaceDB {
     stmt.run('stopped', Date.now(), id, 'active');
   }
 
+  /** Marks every active session as stopped. Returns the number closed. */
+  stopAllActiveSessions(): number {
+    const stmt = this.db.prepare(
+      'UPDATE sessions SET status = ?, ended_at = ? WHERE status = ?',
+    );
+    const info = stmt.run('stopped', Date.now(), 'active');
+    return info.changes;
+  }
+
   /** Marks a session as reverted. */
   revertSession(id: string): void {
     const stmt = this.db.prepare(

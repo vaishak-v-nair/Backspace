@@ -22,7 +22,7 @@ export function isDaemonRunning(cwd: string = process.cwd()): boolean {
 }
 
 /**
- * Spawns the daemon process as a completely detached background supervisor worker loop.
+ * Spawns the daemon process detached into the background and records its PID.
  */
 export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = process.cwd(), sessionId?: string) {
   const backspaceDir = getBackspaceDir(cwd);
@@ -31,11 +31,11 @@ export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = p
   }
 
   if (isDaemonRunning(cwd)) {
-    console.log("⚠️ Backspace watcher daemon is already running smoothly in the background.");
+    console.log("⚠️ Backspace watcher daemon is already running in the background.");
     return;
   }
 
-  console.log("🚀 Initializing indestructible Backspace supervisor...");
+  console.log("🚀 Starting Backspace watcher daemon...");
 
   const logFile = path.join(backspaceDir, "daemon.log");
   const pidFile = path.join(backspaceDir, "daemon.pid");
@@ -52,87 +52,39 @@ export function startSupervisedDaemon(cliEntryPointPath: string, cwd: string = p
   // Open log stream for tracking child process crashes (0o600 = owner-only read/write)
   const logStream = fs.openSync(logFile, "a", 0o600);
 
-  // Spawn the child daemon process detached from the current terminal context.
-  // On Windows, paths with spaces (e.g. C:\Program Files\nodejs\node.exe) break
-  // when shell: true splits on whitespace. We build a single command string
-  // instead of passing args separately to avoid both the path splitting bug
-  // and the Node.js DEP0190 deprecation warning.
-  const isWin = process.platform === 'win32';
-  const child = isWin
-    ? spawn(`"${execCmd}" ${execArgs.map(a => `"${a}"`).join(' ')}`, [], {
-        detached: true,
-        cwd,
-        stdio: ["ignore", logStream, logStream],
-        env: {
-          ...process.env,
-          NODE_ENV: "production",
-          ...(sessionId ? { BACKSPACE_SESSION_ID: sessionId } : {}),
-        },
-        shell: true,
-      })
-    : spawn(execCmd, execArgs, {
-        detached: true,
-        cwd,
-        stdio: ["ignore", logStream, logStream],
-        env: {
-          ...process.env,
-          NODE_ENV: "production",
-          ...(sessionId ? { BACKSPACE_SESSION_ID: sessionId } : {}),
-        },
-      });
+  const spawnOptions = {
+    detached: true,
+    cwd,
+    stdio: ["ignore", logStream, logStream] as ["ignore", number, number],
+    windowsHide: true,
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      ...(sessionId ? { BACKSPACE_SESSION_ID: sessionId } : {}),
+    },
+  };
+
+  // No shell: passing args as an array handles paths with spaces natively AND
+  // keeps the recorded PID pointing at the real node process. With shell:true
+  // on Windows the PID belongs to the cmd.exe wrapper — `backspace-ai stop`
+  // would kill the wrapper while the daemon lived on as an orphan.
+  //
+  // Exception: dev mode on Windows must go through a shell because `npx` is a
+  // .cmd batch file. `stop` compensates by using `taskkill /T` (kills the
+  // whole process tree) on Windows.
+  const useShell = isDev && process.platform === 'win32';
+  const child = useShell
+    ? spawn(`"${execCmd}" ${execArgs.map(a => `"${a}"`).join(' ')}`, [], { ...spawnOptions, shell: true })
+    : spawn(execCmd, execArgs, spawnOptions);
 
   if (child.pid) {
     // Write the verified PID immediately to disk (0o600 = owner-only)
     fs.writeFileSync(pidFile, child.pid.toString(), { encoding: "utf8", mode: 0o600 });
-    console.log(`📡 Daemon successfully detached into background. (PID: ${child.pid})`);
+    console.log(`📡 Daemon detached into background. (PID: ${child.pid})`);
   } else {
     console.error("❌ Failed to start the background daemon process.");
   }
-  
+
   // Unref allows the parent CLI execution to exit cleanly while the child continues living
   child.unref();
-}
-
-/**
- * The internal crash monitoring worker loop.
- * Runs inside the background worker process to catch faults and respawn the watcher.
- */
-export function runSupervisorWorkerLoop(daemonModulePath: string, cwd: string = process.cwd()) {
-  const backspaceDir = getBackspaceDir(cwd);
-  const logFile = path.join(backspaceDir, "daemon.log");
-
-  const spawnWatcher = () => {
-    // Wait for the watcher to spawn, pass args nicely.
-    // However, since we are transpiled with tsup, we might need to spawn it using tsx or node depending on the environment.
-    // If daemonModulePath is a .ts file, we run `npx tsx <path>` for dev mode.
-    const isDev = daemonModulePath.endsWith('.ts');
-    
-    let execCmd = process.execPath;
-    let execArgs = [daemonModulePath];
-
-    if (isDev) {
-      execCmd = 'npx';
-      execArgs = ['tsx', daemonModulePath];
-    }
-
-    // Pass __daemon-run so daemon.js actually executes startDaemon()
-    execArgs.push('__daemon-run');
-
-    const watcherProcess = spawn(execCmd, execArgs, {
-      cwd,
-      stdio: "inherit",
-      shell: process.platform === 'win32'
-    });
-
-    watcherProcess.on("exit", (code, signal) => {
-      const timestamp = new Date().toISOString();
-      const logMessage = `[${timestamp}] Watcher exited with code ${code} (Signal: ${signal}). Re-spawning instantly...\n`;
-      fs.appendFileSync(logFile, logMessage, "utf8");
-      
-      // Prevent rapid fire crash loops by staggering slightly if crashing instantly
-      setTimeout(spawnWatcher, 1000);
-    });
-  };
-
-  spawnWatcher();
 }

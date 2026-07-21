@@ -124,6 +124,12 @@ export function createIgnoreFilter(cwd: string): IgnoreFilter {
         if (ALWAYS_IGNORED_DIRS.has(part)) return true;
       }
 
+      // Secrets safety-net: never capture .env files, even when the project
+      // has no .gitignore entry for them — otherwise their contents land in
+      // the local database with every edit.
+      const basename = parts[parts.length - 1] ?? normalized;
+      if (basename === '.env' || basename.startsWith('.env.')) return true;
+
       // Check .gitignore rules
       return ig.ignores(normalized);
     },

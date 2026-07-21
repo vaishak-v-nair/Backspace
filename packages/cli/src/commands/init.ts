@@ -91,6 +91,28 @@ export async function initCommand(options: { local?: boolean; sync?: boolean } =
     config.updatedAt = new Date().toISOString();
     writeGlobalConfig(config);
 
+    // Keep local state (database + encryption key) out of version control —
+    // committing .backspace/ would push the crypto key and every captured
+    // diff to the remote.
+    const gitignorePath = path.join(cwd, '.gitignore');
+    let gitignoreUpdated = false;
+    try {
+      const existing = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
+      const hasEntry = existing
+        .split(/\r?\n/)
+        .some((line) => line.trim().replace(/\/+$/, '') === '.backspace');
+      if (!hasEntry) {
+        const prefix = existing.length > 0 && !existing.endsWith('\n') ? '\n' : '';
+        fs.appendFileSync(
+          gitignorePath,
+          `${prefix}# Backspace local state (snapshots + encryption key — never commit)\n.backspace/\n`,
+        );
+        gitignoreUpdated = true;
+      }
+    } catch {
+      console.log(chalk.yellow('  ⚠ Could not update .gitignore — add `.backspace/` to it manually.'));
+    }
+
     spinner.succeed(chalk.green.bold('Backspace initialized'));
 
     console.log('');
@@ -107,6 +129,13 @@ export async function initCommand(options: { local?: boolean; sync?: boolean } =
       chalk.cyan(path.join('.', BACKSPACE_DIR, DB_FILENAME)) +
       chalk.dim('  ← SQLite database')
     );
+    if (gitignoreUpdated) {
+      console.log(
+        chalk.dim('    ') +
+        chalk.cyan('.gitignore') +
+        chalk.dim('             ← added .backspace/ entry')
+      );
+    }
 
     console.log('');
 

@@ -49,14 +49,23 @@ export interface SnifferDisposable {
 
 let latestPrompt: PromptLog | null = null;
 
+/**
+ * How long a sniffed prompt stays valid. Without a TTL, a prompt captured
+ * hours ago would keep labeling unrelated manual edits.
+ */
+const PROMPT_TTL_MS = 5 * 60 * 1000;
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Returns the most recently intercepted prompt.
+ * Returns the most recently intercepted prompt, or null if none was captured
+ * within the last PROMPT_TTL_MS.
  * Called by daemon.ts to pair with a file diff.
  */
 export function getLatestPrompt(): string | null {
-  return latestPrompt ? latestPrompt.prompt : null;
+  if (!latestPrompt) return null;
+  if (Date.now() - latestPrompt.timestamp.getTime() > PROMPT_TTL_MS) return null;
+  return latestPrompt.prompt;
 }
 
 /**
@@ -146,7 +155,10 @@ function createAiderSource(cwd: string): LogSource {
   function parseLatestPrompt(): void {
     try {
       const stat = fs.statSync(historyPath);
-      if (stat.size <= lastSize) return;
+      // File shrank — it was truncated or rotated. Reset the read offset,
+      // otherwise tailing silently stops until the file outgrows its old size.
+      if (stat.size < lastSize) lastSize = 0;
+      if (stat.size === lastSize) return;
 
       // Read only the new bytes appended since last check
       const fd = fs.openSync(historyPath, 'r');
