@@ -7,6 +7,7 @@
 
 import { Command } from 'commander';
 import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
 import { initTelemetry, captureException } from './telemetry.js';
 import { initCommand } from './commands/init.js';
 import { stopCommand } from './commands/stop.js';
@@ -44,10 +45,14 @@ initTelemetry();
 
 const program = new Command();
 
+// Resolve the version from package.json at runtime — works both from src/
+// (dev) and dist/ (published tarball), and can never drift from the manifest.
+const pkg = createRequire(import.meta.url)('../package.json') as { version: string };
+
 program
   .name('backspace-ai')
   .description('AI Provenance Engine — deterministic rollback for AI-assisted coding')
-  .version('0.1.0');
+  .version(pkg.version);
 
 // ── Core Commands ────────────────────────────────────────────────────────────
 

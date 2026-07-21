@@ -1,6 +1,6 @@
 {
   "name": "backspace-ai",
-  "version": "0.1.0",
+  "version": "2.1.0",
   "description": "Recovery intelligence for AI-assisted coding — track every AI file change as sessions, score risk, revert atomically.",
   "type": "module",
   "license": "MIT",

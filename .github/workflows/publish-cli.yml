@@ -43,8 +43,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Skip if version already on npm
+        id: check
+        working-directory: packages/cli
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if npm view "backspace-ai@$PKG_VERSION" version >/dev/null 2>&1; then
+            echo "backspace-ai@$PKG_VERSION already published — skipping."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+
       # prepublishOnly runs lint + build again as a final gate
       - name: Publish with provenance
+        if: steps.check.outputs.published != 'true'
         working-directory: packages/cli
         run: npm publish --provenance --access public
         env:

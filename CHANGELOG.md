@@ -3,9 +3,13 @@
 All notable changes to this project are documented here. The CLI package
 (`backspace-ai`) is versioned independently and released with `cli-vX.Y.Z` tags.
 
-## cli-v0.1.0 — 2026-07-21
+## cli-v2.1.0 — 2026-07-21
 
 First public release.
+
+> Versioning note: the npm registry permanently reserves versions of an earlier
+> experimental `backspace-ai@2.0.0` that was published and unpublished, so the
+> public line starts at 2.1.0.
 
 ### Features
 
