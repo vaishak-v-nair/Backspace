@@ -94,24 +94,38 @@ Look for issues labeled [`good first issue`](https://github.com/vaishak-v-nair/B
 - **Risk Patterns**: Language-specific patterns for Python, Rust, Go, Java
 - **Platform Testing**: Windows-specific edge cases, Linux compatibility
 - **Documentation**: Tutorials, examples, translations
-- **VS Code Extension**: The extension package is scaffolded and ready for contributions
+- **Selective Revert**: `--file` / `--hunk` flags for surgical rollback (see roadmap)
 
 ---
 
 ## Adding a New AI Sniffer
 
-Backspace tracks which AI tool made a change by parsing the process tree and environment variables (via `sniffer.ts`). If your favorite AI tool isn't being detected, here is how you can add it:
+Backspace captures prompt context by **passively tailing the log/history files** that AI tools write to disk (`packages/cli/src/sniffer.ts`) — no proxying, no SSL interception. Each tool is a `LogSource` with three methods: `detect()` (are this tool's files present?), `tail()` (watch them for changes), and `stop()`.
 
-1. **Locate the Sniffer Module**: Open `packages/cli/src/sniffer.ts`.
-2. **Find the Tool Signature**: Determine what makes the AI tool unique in a process tree. Does it spawn a specific node script? Does it set a unique environment variable?
-3. **Add the Detection Logic**: Add a new branch in the `detectAITool` function.
+To add a new tool:
+
+1. **Find where the tool logs conversations** — e.g. Aider writes `.aider.chat.history.md` in the project root; Cursor keeps workspace state under its app-data directory.
+2. **Write a factory** following the existing pattern:
    ```typescript
-   // Example for a hypothetical new tool 'CodeGenius'
-   if (processEnv.CODE_GENIUS_SESSION_ID || commandLine.includes('codegenius')) {
-     return { name: 'codegenius', confidence: 0.9 };
+   function createCodeGeniusSource(cwd: string): LogSource {
+     const historyPath = path.join(cwd, '.codegenius', 'history.jsonl');
+     let watcher: FSWatcher | null = null;
+     return {
+       name: 'CodeGenius',
+       detect: () => fs.existsSync(historyPath),
+       tail() {
+         watcher = chokidar.watch(historyPath, { persistent: false });
+         watcher.on('change', () => {
+           const prompt = /* parse the newest user prompt from the file */;
+           if (prompt) setPrompt(prompt, 'CodeGenius');
+         });
+       },
+       stop() { watcher?.close(); },
+     };
    }
    ```
-4. **Test It**: Run `backspace-ai watch` locally while using the new tool and verify that `backspace-ai status` correctly identifies it as the active tool.
+3. **Register it** in the `sources` array inside `startSniffer()`.
+4. **Test it**: run `backspace-ai watch`, use the tool, then check `backspace-ai log` — new sessions/events should carry the sniffed prompt instead of `System: Auto-captured batch change`.
 
 ---
 
@@ -145,10 +159,11 @@ git checkout -b fix/your-bug-fix
 ### 3. Test Your Changes
 
 ```bash
-# CLI: Build must pass with zero errors
+# CLI: type-check, build, and end-to-end smoke test must pass
 cd packages/cli
-npm run build
 npx tsc --noEmit
+npm run build
+npm run smoke   # proves init → watch → edit → stop → revert restores files
 
 # Web: Build must pass
 cd apps/web

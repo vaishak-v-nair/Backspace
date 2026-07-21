@@ -11,12 +11,14 @@ permissions:
 
 jobs:
   build-and-test:
-    name: Build & Lint (${{ matrix.os }})
+    name: Build & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        # windows-latest included deliberately: the daemon/stop lifecycle has
+        # Windows-specific process-tree behavior that ubuntu alone won't catch.
+        os: [ubuntu-latest, windows-latest]
         node: [22]
 
     steps:
@@ -41,9 +43,13 @@ jobs:
         working-directory: packages/cli
         run: npm run build
 
+      - name: Smoke test CLI (init → watch → edit → stop → revert)
+        working-directory: packages/cli
+        run: npm run smoke
 
       # ── Web app ──────────────────────────────────────────────
       - name: Build Web
+        if: matrix.os == 'ubuntu-latest'
         working-directory: apps/web
         run: npm run build
         env:

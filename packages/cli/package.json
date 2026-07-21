@@ -1,19 +1,50 @@
 {
   "name": "backspace-ai",
   "version": "0.1.0",
-  "description": "Backspace CLI — deterministic rollback for AI-assisted coding sessions",
+  "description": "Recovery intelligence for AI-assisted coding — track every AI file change as sessions, score risk, revert atomically.",
   "type": "module",
+  "license": "MIT",
+  "author": "Vaishak V Nair (https://github.com/vaishak-v-nair)",
+  "homepage": "https://github.com/vaishak-v-nair/Backspace#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaishak-v-nair/Backspace.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/vaishak-v-nair/Backspace/issues"
+  },
+  "keywords": [
+    "ai",
+    "claude",
+    "cursor",
+    "aider",
+    "copilot",
+    "mcp",
+    "rollback",
+    "revert",
+    "snapshot",
+    "provenance",
+    "recovery",
+    "developer-tools",
+    "cli"
+  ],
   "bin": {
     "backspace-ai": "./dist/index.js"
   },
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsx watch src/index.ts",
     "lint": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "smoke": "node scripts/smoke.mjs",
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.1",
